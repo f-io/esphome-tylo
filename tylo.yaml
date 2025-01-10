@@ -1,0 +1,138 @@
+substitutions:
+  device_name: "tylo"
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/f-io/esphome-tylo/
+      ref: main
+    refresh: 1s
+    components: [ sauna360 ]
+    
+esphome:
+  name: ${device_name}
+  friendly_name: ${device_name}
+  comment: ${device_name} sauna controller
+  area: Sauna
+
+esp32:
+  board: lolin_s3  
+
+logger:
+  level: WARN
+  baud_rate: 0
+
+api:
+  encryption:
+    key: ""
+
+ota:
+  - platform: esphome
+    password: ""
+
+wifi:
+  power_save_mode: NONE
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+uart:
+    tx_pin: GPIO41
+    rx_pin: GPIO42
+    baud_rate: 19200
+    data_bits: 8
+    parity: EVEN
+    stop_bits: 1
+
+sauna360:
+  id: sauna360_component
+
+binary_sensor:
+  - platform: sauna360
+    heater_status:
+      name: "Heater State"
+  - platform: sauna360
+    light_status:
+      name: "Light State"
+  - platform: sauna360
+    ready_status: 
+      name: "Ready State"
+
+sensor:
+  - platform: wifi_signal
+    name: "${device_name} WiFi Signal"
+    update_interval: 60s
+    icon: "mdi:wifi"
+  - platform: sauna360
+    id: current_temperature_sensor
+    current_temperature:
+      name: "Current Temperature"
+  - platform: sauna360
+    setting_temperature:
+      name: "Setting Temperature"
+  - platform: sauna360
+    remaining_time:
+      name: "Remaining Time"
+  - platform: sauna360
+    setting_bath_time:
+      name: "Setting Bath Time"
+  - platform: sauna360
+    total_uptime:
+      name: "Total Uptime"
+  - platform: sauna360
+    max_bath_temperature:
+      name: "Max Bath Temperature"
+  - platform: sauna360
+    overheating_pcb_limit:
+      name: "Overheating PCB Limit"
+
+number:
+  - platform: sauna360
+    bath_temperature:
+      name: "Bath Temperature"
+      id: bath_temperature
+      mode: box
+      bath_temperature_default: 94
+  - platform: sauna360
+    bath_time:
+      name: "Bath Time"
+      mode: box
+      bath_time_default: 300
+  - platform: sauna360
+    max_bath_temperature:
+      name: "Max Bath Temperature"
+      mode: box
+      max_bath_temperature_default: 110
+  - platform: sauna360
+    overheating_pcb_limit:
+      name: "Overheating PCB Limit"
+      mode: box
+      overheating_pcb_limit_default: 80
+
+switch:
+  - platform: sauna360
+    light_relay:
+      name: "Light"
+  - platform: sauna360
+    heater_relay:
+      name: "Heater"
+      id: heater_relay_switch
+
+text_sensor:
+  - platform: sauna360
+    heater_state:
+      name: "Heating Element"
+
+time:
+  - platform: homeassistant
+
+climate:
+  - platform: sauna360
+    id: sauna_climate
+    name: "Sauna Climate"
+    sauna360_id: sauna360_component
+    bath_temperature_number_id: bath_temperature
+    heater_relay_id: heater_relay_switch
+    visual:
+        min_temperature: 40
+        max_temperature: 110
+        temperature_step: 1.0
