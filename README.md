@@ -26,6 +26,18 @@ The external switch with LED feedback used in this project can be found [here](h
 
 ## Pinout and Wiring Diagram
 
+### Wiring Diagram
+
+<table>
+  <tbody>
+    <tr>
+      <th rowspan="4"><img src="documentation/images/esphome_tylo_wiring_example.jpeg" alt="esphome-tylo wiring example" style="width:667px;height:auto;"></th>
+    </tr>
+  </tbody>
+</table>
+
+---
+
 ### Connector Pinout (Western Connector 4P4C)
 
 <table>
@@ -40,7 +52,7 @@ The external switch with LED feedback used in this project can be found [here](h
     <tr>
       <td>1</td>
       <td>A</td>
-      <th rowspan="4"><img src="documentation/images/pinout.jpeg" alt="Pinout" style="width:286px;height:auto;"></th>
+      <th rowspan="4"><img src="documentation/images/pinout.jpeg" alt="Pinout"></th>
     </tr>
     <tr>
       <td>2</td>
@@ -53,18 +65,6 @@ The external switch with LED feedback used in this project can be found [here](h
     <tr>
       <td>4</td>
       <td>GND</td>
-    </tr>
-  </tbody>
-</table>
-
----
-
-### Wiring Diagram
-
-<table>
-  <tbody>
-    <tr>
-      <th rowspan="4"><img src="documentation/images/wiring_diagram.jpeg" alt="Wirring Diagram" style="width:667px;height:auto;"></th>
     </tr>
   </tbody>
 </table>
@@ -159,6 +159,15 @@ The external switch with LED feedback used in this project can be found [here](h
     </tr>
   </tbody>
 </table>
+
+<table>
+  <tbody>
+    <tr>
+      <th rowspan="4"><img src="documentation/images/wiring_diagram.jpeg" alt="Wirring Diagram" ></th>
+    </tr>
+  </tbody>
+</table>
+
 
 ---
 
