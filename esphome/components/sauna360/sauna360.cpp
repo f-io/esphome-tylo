@@ -22,6 +22,9 @@ void SAUNA360Component::setup() {
   if (this->heater_relay_switch_ != nullptr) {
     this->heater_relay_switch_->publish_state(false);
   }
+  if (this->bath_temperature_number_ != nullptr) {
+    this->bath_temperature_number_->publish_state(0.0);
+  }
   if (this->light_relay_switch_ == nullptr) {
   }
   if (this->heater_relay_switch_ == nullptr) {
