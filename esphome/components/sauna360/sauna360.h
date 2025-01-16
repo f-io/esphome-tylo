@@ -78,7 +78,18 @@ class SAUNA360Component : public uart::UARTDevice, public Component {
     void set_overheating_pcb_limit_number(float value);
     void set_overheating_pcb_limit_default_value(float overheating_pcb_limit_default) { overheating_pcb_limit_default_ = overheating_pcb_limit_default; }
     void set_light_relay(bool enable);
-    void set_heater_relay(bool enable); 
+    void set_heater_relay(bool enable);
+    void process_heater_status(uint32_t data);
+    void process_bath_time(uint32_t data);
+    void process_pcb_limit(uint32_t data);
+    void process_temperature(uint32_t data);
+    void process_heater_error(uint32_t data);
+    void process_light_heater(uint32_t data);
+    void process_total_uptime(uint32_t data);
+    void process_remaining_time(uint32_t data);
+    void process_door_error(uint32_t data);
+    void process_sensor_error(uint32_t data);
+
 
   protected:
     esphome::HighFrequencyLoopRequester high_freq_;
@@ -91,6 +102,7 @@ class SAUNA360Component : public uart::UARTDevice, public Component {
     uint32_t bath_time_received_hex_;
     uint32_t max_bath_temperature_received_hex_;
     uint32_t overheating_pcb_limit_received_hex_;
+    uint8_t decode_escape_sequence(uint8_t data);  
     bool frame_flag_;
     bool state_changed_;
     bool heating_status_;
@@ -99,8 +111,9 @@ class SAUNA360Component : public uart::UARTDevice, public Component {
     float max_bath_temperature_default_{NAN};
     float overheating_pcb_limit_default_{NAN};
     void handle_byte_(uint8_t byte);
-    void handle_frame_(std::vector<uint8_t> frame);
     void handle_packet_(std::vector<uint8_t> packet);
+    void handle_frame_(const std::vector<uint8_t> &frame);
+    bool validate_packet(std::vector<uint8_t> &packet); 
     void send_data_();
     void create_send_data_(uint8_t type, uint16_t code, uint32_t data);
 };

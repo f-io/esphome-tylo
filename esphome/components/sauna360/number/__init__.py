@@ -88,7 +88,8 @@ async def to_code(config):
       await cg.register_parented(n, sauna360_component)
       cg.add(sauna360_component.set_bath_time_number(n))
       if CONF_BATH_TIME_DEFAULT in bath_time:
-        cg.add(sauna360_component.set_bath_time_default_value(bath_time[CONF_BATH_TIME_DEFAULT]))
+        cg.add(sauna360_component.set_bath_time_default_value(bath_time[CONF_BATH_TIME_DEFAULT])
+      )   
     if bath_temperature := config.get(CONF_BATH_TEMPERATURE):
       n = await number.new_number(
         bath_temperature, min_value=40, max_value=110, step=1,
@@ -97,7 +98,7 @@ async def to_code(config):
       cg.add(sauna360_component.set_bath_temperature_number(n))
       if CONF_BATH_TEMPERATURE_DEFAULT in bath_temperature:
         cg.add(sauna360_component.set_bath_temperature_default_value(bath_temperature[CONF_BATH_TEMPERATURE_DEFAULT])
-      )
+      )        
     if max_bath_temperature := config.get(CONF_MAX_BATH_TEMPERATURE):
       n = await number.new_number(
         max_bath_temperature, min_value=40, max_value=110, step=1,
@@ -106,7 +107,7 @@ async def to_code(config):
       cg.add(sauna360_component.set_max_bath_temperature_number(n))
       if CONF_MAX_BATH_TEMPERATURE_DEFAULT in max_bath_temperature:
         cg.add(sauna360_component.set_max_bath_temperature_default_value(max_bath_temperature[CONF_MAX_BATH_TEMPERATURE_DEFAULT])
-      )
+      )       
     if overheating_pcb_limit := config.get(CONF_OVERHEATING_PCB_LIMIT):
       n = await number.new_number(
         overheating_pcb_limit, min_value=70, max_value=90, step=1,
