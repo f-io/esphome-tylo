@@ -91,7 +91,7 @@ number:
       name: "Bath Temperature"
       id: bath_temperature
       mode: box
-      bath_temperature_default: 94
+      bath_temperature_default: 90
   - platform: sauna360
     bath_time:
       name: "Bath Time"
@@ -102,11 +102,6 @@ number:
       name: "Max Bath Temperature"
       mode: box
       max_bath_temperature_default: 110
-  - platform: sauna360
-    overheating_pcb_limit:
-      name: "Overheating PCB Limit"
-      mode: box
-      overheating_pcb_limit_default: 80
 
 switch:
   - platform: sauna360

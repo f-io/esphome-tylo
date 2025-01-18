@@ -49,6 +49,7 @@ class SAUNA360Listener {
    virtual void on_heater_state(std::string &fw) {};
    virtual void on_light_status(bool light_status) {};
    virtual void on_ready_status(bool ready_status) {};
+   int current_target_temperature = -1; 
 };
 
 class SAUNA360Component : public uart::UARTDevice, public Component {
@@ -68,6 +69,7 @@ class SAUNA360Component : public uart::UARTDevice, public Component {
     void setup() override;
     void loop() override;
     void dump_config() override;
+    void initialize_defaults();
     void register_listener(SAUNA360Listener *listener) { this->listeners_.push_back(listener); }
     void set_bath_time_number(float value);
     void set_bath_time_default_value(float bath_time_default) { bath_time_default_ = bath_time_default; }
@@ -75,8 +77,6 @@ class SAUNA360Component : public uart::UARTDevice, public Component {
     void set_bath_temperature_default_value(float bath_temperature_default) { bath_temperature_default_ = bath_temperature_default; }
     void set_max_bath_temperature_number(float value);
     void set_max_bath_temperature_default_value(float max_bath_temperature_default) { max_bath_temperature_default_ = max_bath_temperature_default; }
-    void set_overheating_pcb_limit_number(float value);
-    void set_overheating_pcb_limit_default_value(float overheating_pcb_limit_default) { overheating_pcb_limit_default_ = overheating_pcb_limit_default; }
     void set_light_relay(bool enable);
     void set_heater_relay(bool enable);
     void process_heater_status(uint32_t data);
@@ -90,30 +90,29 @@ class SAUNA360Component : public uart::UARTDevice, public Component {
     void process_door_error(uint32_t data);
     void process_sensor_error(uint32_t data);
 
-
   protected:
     esphome::HighFrequencyLoopRequester high_freq_;
     std::vector<SAUNA360Listener *> listeners_{};
     std::vector<uint8_t> rx_message_;
     std::queue<std::vector<uint8_t>> tx_queue_;
     uint8_t  last_bytes_[2] = {0, 0};
+    uint8_t decode_escape_sequence(uint8_t data);  
     uint32_t temperature_received_hex_;
     uint32_t setpoint_temperature_received_hex_;
     uint32_t bath_time_received_hex_;
     uint32_t max_bath_temperature_received_hex_;
     uint32_t overheating_pcb_limit_received_hex_;
-    uint8_t decode_escape_sequence(uint8_t data);  
     bool frame_flag_;
     bool state_changed_;
     bool heating_status_;
+    bool defaults_initialized_ = false;
     float bath_time_default_{NAN};
     float bath_temperature_default_{NAN};
     float max_bath_temperature_default_{NAN};
-    float overheating_pcb_limit_default_{NAN};
+    bool validate_packet(std::vector<uint8_t> &packet); 
     void handle_byte_(uint8_t byte);
     void handle_packet_(std::vector<uint8_t> packet);
     void handle_frame_(const std::vector<uint8_t> &frame);
-    bool validate_packet(std::vector<uint8_t> &packet); 
     void send_data_();
     void create_send_data_(uint8_t type, uint16_t code, uint32_t data);
 };

@@ -28,23 +28,6 @@ namespace esphome
       if (this->bath_temperature_number_ != nullptr) {
         this->bath_temperature_number_->publish_state(0.0);
       }
-
-      if (!std::isnan(this->max_bath_temperature_default_)) {
-        this->set_max_bath_temperature_number(max_bath_temperature_default_);
-      }
-      if (!std::isnan(this->bath_temperature_default_)) {
-        this->set_bath_temperature_number(bath_temperature_default_);
-      }
-      if (!std::isnan(this->bath_time_default_)) {
-        this->set_bath_time_number(bath_time_default_);
-      }
-      if (!std::isnan(this->overheating_pcb_limit_default_)) {
-        this->set_overheating_pcb_limit_number(overheating_pcb_limit_default_);
-       }
-      if (this->light_relay_switch_ == nullptr) {
-      }
-      if (this->heater_relay_switch_ == nullptr) {
-      }
       for (auto &listener : listeners_) {
         listener->on_ready_status(true);
       }
@@ -116,7 +99,7 @@ namespace esphome
       }
 
       if (!validate_packet(packet)) {
-        ESP_LOGCONFIG(TAG, "Invalid packet size or CRC error");
+        ESP_LOGI(TAG, "Invalid packet size or CRC error");
         return;
       }
 
@@ -129,7 +112,7 @@ namespace esphome
         case 0x67: return 0x98; // SOF
         case 0x6E: return 0x91; // ESC
         default:
-            ESP_LOGCONFIG(TAG, "Unknown escape sequence: %02X", data);
+            ESP_LOGI(TAG, "Unknown escape sequence: %02X", data);
             return 0x91; // Return original escape character for unknown sequences
       }
     }
@@ -144,7 +127,13 @@ namespace esphome
 
       uint16_t calculated_crc = crc16be(packet.data(), packet.size(), 0xFFFF, 0x90D9, false, false);
       if (crc != calculated_crc) {
-        ESP_LOGCONFIG(TAG, "CRC ERROR: Expected %04X, got %04X", crc, calculated_crc);
+        std::string packet_str;
+        for (size_t i = 0; i < packet.size(); ++i) {
+          char buffer[4];
+          snprintf(buffer, sizeof(buffer), " %02X", packet[i]);
+          packet_str += buffer;
+        }
+        ESP_LOGI(TAG, "CRC ERROR: Expected %04X, got %04X. Full packet:[%s]", crc, calculated_crc, packet_str.c_str());
         return false;
       }
       return true;
@@ -156,13 +145,18 @@ namespace esphome
       uint16_t code = encode_uint16(packet[2], packet[3]);
       uint32_t data = encode_uint32(packet[4], packet[5], packet[6], packet[7]);
 
+      if (!this->defaults_initialized_ && data != 0 && packet_type == 0x08) {
+        this->initialize_defaults();
+        this->defaults_initialized_ = true;
+      }
+
       if ((packet_type == 0x07) || (packet_type == 0x09)) {
-        ESP_LOGCONFIG(TAG, "%s [ HEATER <-- PANEL ] CODE %04X DATA 0x%08X", format_hex_pretty(packet).c_str(), code, data);
+        ESP_LOGD(TAG, "%s [ HEATER <-- PANEL ] CODE %04X DATA 0x%08X", format_hex_pretty(packet).c_str(), code, data);
         packet.clear();
         return;
       }
 
-      ESP_LOGCONFIG(TAG, "%s [ HEATER --> PANEL ] CODE %04X DATA 0x%08X", format_hex_pretty(packet).c_str(), code, data);
+      ESP_LOGD(TAG, "%s [ HEATER --> PANEL ] CODE %04X DATA 0x%08X", format_hex_pretty(packet).c_str(), code, data);
       switch (code) {
         case 0x3400:
           this->process_heater_status(data);
@@ -199,7 +193,7 @@ namespace esphome
            this->process_sensor_error(data);
           }
           else {
-            ESP_LOGCONFIG(TAG, "Unhandled packet code: %04X", code);
+            ESP_LOGD(TAG, "Unhandled packet code: %04X", code);
           }
           break;
       }
@@ -210,12 +204,14 @@ namespace esphome
       for (auto &listener : listeners_) {
         listener->on_light_status((data >> 3) & 1);
       }
-
+      // sync light switch
       this->light_relay_switch_->publish_state((data >> 3) & 1);
 
       for (auto &listener : listeners_) {
         listener->on_heater_status((data >> 4) & 1);
       }
+      // sync heater switch
+      this->heater_relay_switch_->publish_state((data >> 4) & 1);
 
       this->state_changed_ = true;
       this->heating_status_ = ((data >> 4) & 1);
@@ -223,24 +219,6 @@ namespace esphome
       if ((data >> 4) & 1) {
         for (auto &listener : listeners_) {
           listener->on_ready_status(false);
-        }
-        value = "On";
-        for (auto &listener : listeners_) {
-          listener->on_heater_state(value);
-        }
-      }
-      else {
-        value = "Idle";
-        for (auto &listener : listeners_) {
-          listener->on_heater_state(value);
-        }
-        this->heater_relay_switch_->publish_state((data >> 4) & 1);
-      }
-
-      if ((data >> 5) & 1) {
-        value = "Standby";
-        for (auto &listener : listeners_) {
-          listener->on_heater_state(value);
         }
       }
     }
@@ -275,29 +253,33 @@ namespace esphome
       for (auto &listener : listeners_) {
         listener->on_overheating_pcb_limit(overheating_pcb_limit);
       }
-      this->overheating_pcb_limit_number_->publish_state(overheating_pcb_limit);
     }
 
     void SAUNA360Component::process_temperature(uint32_t data) {
       int actual_temp = (data & 0x00007FF) / 9.0;
       this->temperature_received_hex_ = (data & 0x00007FF);
-      // actual temp -> climate
+  
       for (auto &listener : listeners_) {
         listener->on_temperature(actual_temp);
       }
+  
       int setpoint_temp = ((data >> 11) & 0x00007FF) / 9.0;
       this->setpoint_temperature_received_hex_ = ((data >> 11) & 0x00007FF);
-      // only on change
+
       if (this->bath_temperature_number_ != nullptr) {
         if (this->bath_temperature_number_->state != setpoint_temp) {
           this->bath_temperature_number_->publish_state(setpoint_temp);
         }
       }
-      // target temp -> listener
+
       for (auto &listener : listeners_) {
-        listener->on_temperature_setting(setpoint_temp);
+        if (listener->current_target_temperature != setpoint_temp) {
+          listener->on_temperature_setting(setpoint_temp); 
+          listener->current_target_temperature = setpoint_temp;
+        }
       }
-      ESP_LOGCONFIG(TAG, "Updated Climate and Number component: Current Temperature = %d°C, Target Temperature = %d°C", actual_temp, setpoint_temp);
+
+      ESP_LOGI(TAG, "Current Temperature = %d°C, Target Temperature = %d°C", actual_temp, setpoint_temp);
     }
 
     void SAUNA360Component::process_heater_error(uint32_t data) {
@@ -313,16 +295,8 @@ namespace esphome
     void SAUNA360Component::process_light_heater(uint32_t data) {
       bool light_state = (data & 0x00020000) != 0;           // Bit 17 light state
       bool heater_state = (data & 0x0001C000) == 0x0001C000; // Bit 14-16 heater state
-      ESP_LOGCONFIG(TAG, "0x7180 Received: Light: %s, Heater: %s", ONOFF(light_state), ONOFF(heater_state));
-      // sync light switch state
-      if (this->light_relay_switch_ != nullptr) {
-        this->light_relay_switch_->publish_state(light_state);
-      }
-      // sync heater switch state
-      if (this->heater_relay_switch_ != nullptr) {
-        this->heater_relay_switch_ ->publish_state(heater_state);
-      }
-      std::string value = heater_state ? "On" : "Idle";
+      ESP_LOGI(TAG, "Light: %s, Heater Status: %s", ONOFF(light_state), heater_state ? "Heating" : "Standby");;
+      std::string value = heater_state ? "Heating" : "Standby";
       for (auto &listener : listeners_) {
         listener->on_heater_state(value);
       }
@@ -332,14 +306,14 @@ namespace esphome
       for (auto &listener : listeners_) {
         listener->on_total_uptime(data);
       }
-      ESP_LOGCONFIG(TAG, "Total Uptime: %d", data);
+      ESP_LOGI(TAG, "Total uptime: %d minutes", data);
     }
 
     void SAUNA360Component::process_remaining_time(uint32_t data) {
       for (auto &listener : listeners_) {
         listener->on_remaining_time(data);
       }
-      ESP_LOGCONFIG(TAG, "Remaining Time: %d", data);
+      ESP_LOGI(TAG, "Remaining time: %d minutes", data);
     }
 
     void SAUNA360Component::process_door_error(uint32_t data) {
@@ -389,7 +363,7 @@ namespace esphome
         for (auto &listener : listeners_) {
           listener->on_heater_state(error_message);
         }
-        ESP_LOGCONFIG(TAG, "Sensor Error: %s", error_message.c_str());
+        ESP_LOGI(TAG, "Sensor error: %s", error_message.c_str());
       }
     }
 
@@ -416,31 +390,27 @@ namespace esphome
       }
 
       this->create_send_data_(0x07, 0x4002, data);
+      ESP_LOGI(TAG, "Bath time sent: %.0f minutes", value);
     }
 
     void SAUNA360Component::set_max_bath_temperature_number(float value) {
       uint32_t data = this->bath_time_received_hex_;
       data |= (((uint32_t)value * 18) << 20);
       this->create_send_data_(0x07, 0x4002, data);
+      ESP_LOGI(TAG, "Max bath temperature sent: %.0f°C", value);
     }
 
     void SAUNA360Component::set_bath_temperature_number(float value) {
       float current_set_temp = ((this->setpoint_temperature_received_hex_ & 0x00007FF) / 9.0);
-      // only on change
+      // homekit allow .5° values
+      value = round(value);
       if (value != current_set_temp) {
         uint32_t data = 0;
         data |= (((uint32_t)value * 9) << 11);
         data |= this->temperature_received_hex_;
         this->create_send_data_(0x07, 0x6000, data);
-        ESP_LOGCONFIG(TAG, "New target temperature set and sent: %f°C", value);
-      } else {
-        ESP_LOGCONFIG(TAG, "Target temperature unchanged: %f°C", value);
+        ESP_LOGI(TAG, "Bath temperature sent: %.0f°C", value);
       }
-    }
-
-    void SAUNA360Component::set_overheating_pcb_limit_number(float value) {
-      uint32_t data = (((uint32_t)value * 18) << 11);
-      this->create_send_data_(0x07, 0x4003, data);
     }
 
     void SAUNA360Component::set_light_relay(bool enable) {
@@ -454,7 +424,7 @@ namespace esphome
     }
 
     void SAUNA360Component::create_send_data_(uint8_t type, uint16_t code, uint32_t data) {
-      ESP_LOGCONFIG(TAG, "CREATING SEND DATA TYPE:%s CODE:%s DATA:%s",
+      ESP_LOGD(TAG, "CREATING SEND DATA TYPE:%s CODE:%s DATA:%s",
                     format_hex_pretty(type).c_str(),
                     format_hex_pretty(code).c_str(),
                     format_hex_pretty(data).c_str());
@@ -483,9 +453,24 @@ namespace esphome
       this->flush();
     }
 
+    void SAUNA360Component::initialize_defaults() {
+      if (!std::isnan(this->max_bath_temperature_default_)) {
+        this->set_max_bath_temperature_number(max_bath_temperature_default_);
+        ESP_LOGI(TAG, "Initialize_defaults - Max bath temperature set to: %.0f°C", max_bath_temperature_default_);
+      }
+      if (!std::isnan(this->bath_temperature_default_)) {
+        this->set_bath_temperature_number(bath_temperature_default_);
+        ESP_LOGI(TAG, "Initialize_defaults - Bath temperature set to: %.0f°C", bath_temperature_default_);
+      }
+      if (!std::isnan(this->bath_time_default_)) {
+        this->set_bath_time_number(bath_time_default_);
+        ESP_LOGI(TAG, "Initialize_defaults - Bath time set to: %.0f minutes", bath_time_default_);
+      }
+      ESP_LOGI(TAG, "Initialize_defaults - Values initialized.");
+    }
+
     void SAUNA360Component::dump_config() {
       ESP_LOGCONFIG(TAG, "UART component");
-      ESP_LOGCONFIG(TAG, "Default Bath Time: %f", bath_time_default_);
     }
 
   } // namespace sauna360
