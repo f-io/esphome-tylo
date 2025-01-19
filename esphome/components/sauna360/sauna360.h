@@ -106,6 +106,7 @@ class SAUNA360Component : public uart::UARTDevice, public Component {
     bool state_changed_;
     bool heating_status_;
     bool defaults_initialized_ = false;
+    bool oven_ready_ = false;
     float bath_time_default_{NAN};
     float bath_temperature_default_{NAN};
     float max_bath_temperature_default_{NAN};

@@ -145,11 +145,6 @@ namespace esphome
       uint16_t code = encode_uint16(packet[2], packet[3]);
       uint32_t data = encode_uint32(packet[4], packet[5], packet[6], packet[7]);
 
-      if (!this->defaults_initialized_ && data != 0 && packet_type == 0x08) {
-        this->initialize_defaults();
-        this->defaults_initialized_ = true;
-      }
-
       if ((packet_type == 0x07) || (packet_type == 0x09)) {
         ESP_LOGD(TAG, "%s [ HEATER <-- PANEL ] CODE %04X DATA 0x%08X", format_hex_pretty(packet).c_str(), code, data);
         packet.clear();
@@ -220,6 +215,22 @@ namespace esphome
         for (auto &listener : listeners_) {
           listener->on_ready_status(false);
         }
+        value = "On";
+        for (auto &listener : listeners_) {
+          listener->on_heater_state(value);
+        }
+      }
+      else {
+        value = "Standby";
+        for (auto &listener : listeners_) {
+          listener->on_heater_state(value);
+        }
+      }
+      if ((data >> 5) & 1) {
+        value = "Standby";
+        for (auto &listener : listeners_) {
+          listener->on_heater_state(value);
+        }
       }
     }
 
@@ -279,7 +290,7 @@ namespace esphome
         }
       }
 
-      ESP_LOGI(TAG, "Current Temperature = %d°C, Target Temperature = %d°C", actual_temp, setpoint_temp);
+      ESP_LOGI(TAG, "Temperature = %d°C, Target Temperature = %d°C", actual_temp, setpoint_temp);
     }
 
     void SAUNA360Component::process_heater_error(uint32_t data) {
@@ -307,6 +318,14 @@ namespace esphome
         listener->on_total_uptime(data);
       }
       ESP_LOGI(TAG, "Total uptime: %d minutes", data);
+
+      if (!this->oven_ready_) {
+          this->oven_ready_ = true;
+          ESP_LOGI(TAG, "Oven is now ready to receive data.");
+      } 
+      if (this->oven_ready_ && !this->defaults_initialized_) {
+            initialize_defaults();
+      }   
     }
 
     void SAUNA360Component::process_remaining_time(uint32_t data) {
@@ -390,14 +409,14 @@ namespace esphome
       }
 
       this->create_send_data_(0x07, 0x4002, data);
-      ESP_LOGI(TAG, "Bath time sent: %.0f minutes", value);
+      ESP_LOGI(TAG, "SENT: Bath time: %.0f minutes", value);
     }
 
     void SAUNA360Component::set_max_bath_temperature_number(float value) {
       uint32_t data = this->bath_time_received_hex_;
       data |= (((uint32_t)value * 18) << 20);
       this->create_send_data_(0x07, 0x4002, data);
-      ESP_LOGI(TAG, "Max bath temperature sent: %.0f°C", value);
+      ESP_LOGI(TAG, "SENT: Max bath temperature: %.0f°C", value);
     }
 
     void SAUNA360Component::set_bath_temperature_number(float value) {
@@ -409,7 +428,7 @@ namespace esphome
         data |= (((uint32_t)value * 9) << 11);
         data |= this->temperature_received_hex_;
         this->create_send_data_(0x07, 0x6000, data);
-        ESP_LOGI(TAG, "Bath temperature sent: %.0f°C", value);
+        ESP_LOGI(TAG, "SENT: Bath temperature: %.0f°C", value);
       }
     }
 
@@ -422,6 +441,7 @@ namespace esphome
       // Heater toggle command
       this->create_send_data_(0x07, 0x7000, enable ? 0x1 : 0x1);
     }
+    
 
     void SAUNA360Component::create_send_data_(uint8_t type, uint16_t code, uint32_t data) {
       ESP_LOGD(TAG, "CREATING SEND DATA TYPE:%s CODE:%s DATA:%s",
@@ -454,19 +474,21 @@ namespace esphome
     }
 
     void SAUNA360Component::initialize_defaults() {
+      ESP_LOGI(TAG, "=========== Initialized to default values ===========");
+      ESP_LOGI(TAG, "Max bath temperature: %.0f°C", max_bath_temperature_default_);
+      ESP_LOGI(TAG, "Bath time: %.0f minutes", bath_time_default_);
+      ESP_LOGI(TAG, "Bath temperature: %.0f°C", bath_temperature_default_);
+      ESP_LOGI(TAG, "=======================================================");
       if (!std::isnan(this->max_bath_temperature_default_)) {
         this->set_max_bath_temperature_number(max_bath_temperature_default_);
-        ESP_LOGI(TAG, "Initialize_defaults - Max bath temperature set to: %.0f°C", max_bath_temperature_default_);
-      }
-      if (!std::isnan(this->bath_temperature_default_)) {
-        this->set_bath_temperature_number(bath_temperature_default_);
-        ESP_LOGI(TAG, "Initialize_defaults - Bath temperature set to: %.0f°C", bath_temperature_default_);
       }
       if (!std::isnan(this->bath_time_default_)) {
         this->set_bath_time_number(bath_time_default_);
-        ESP_LOGI(TAG, "Initialize_defaults - Bath time set to: %.0f minutes", bath_time_default_);
       }
-      ESP_LOGI(TAG, "Initialize_defaults - Values initialized.");
+      if (!std::isnan(this->bath_temperature_default_)) {
+        this->set_bath_temperature_number(bath_temperature_default_);
+      }
+      this->defaults_initialized_ = true;
     }
 
     void SAUNA360Component::dump_config() {
