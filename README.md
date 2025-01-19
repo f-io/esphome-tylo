@@ -432,17 +432,17 @@ number:
       name: "Bath Temperature"
       id: bath_temperature
       mode: box
-      bath_temperature_default: 90
+      bath_temperature_default: 90 # default value
   - platform: sauna360
     bath_time:
       name: "Bath Time"
       mode: box
-      bath_time_default: 300
+      bath_time_default: 300 # default value
   - platform: sauna360
     max_bath_temperature:
       name: "Max Bath Temperature"
       mode: box
-      max_bath_temperature_default: 110
+      max_bath_temperature_default: 110 # default value
 
 switch:
   - platform: sauna360
