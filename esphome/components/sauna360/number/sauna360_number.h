@@ -30,13 +30,5 @@ class SAUNA360MaxBathTemperatureNumber : public number::Number, public Parented<
   void control(float value) override;
 };
 
-class SAUNA360OverheatingPCBLimitNumber : public number::Number, public Parented<SAUNA360Component> {
- public:
-  SAUNA360OverheatingPCBLimitNumber() = default;
-
- protected:
-  void control(float value) override;
-};
-
 }  // namespace sauna360
 }  // namespace esphome
