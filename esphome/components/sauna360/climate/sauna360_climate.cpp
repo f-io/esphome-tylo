@@ -33,7 +33,7 @@ void Sauna360Climate::control(const climate::ClimateCall &call) {
         this->bath_temperature_number_->make_call().set_value(target_temp).perform();
       }
     } else {
-      ESP_LOGD(TAG, "Target temperature unchanged. Skipping update.");
+      ESP_LOGI(TAG, "Target temperature unchanged. Skipping update.");
     }
   }
 
