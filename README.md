@@ -20,7 +20,10 @@ The external switch with LED feedback used in this project can be found [here](h
 
 ### Sauna PCB
 
-![Oven PCB](documentation/images/96000067.jpeg)
+| ![Oven PCB](documentation/images/96000067.jpeg) |
+|:----------------------------------------------:|
+| **Mikrocontroller**: `PIC32 MX150F128D` |
+| **Differential Bus Transceivers**: `TI SN65176B` |                  
 
 ---
 
@@ -31,7 +34,7 @@ The external switch with LED feedback used in this project can be found [here](h
 <table>
   <tbody>
     <tr>
-      <th rowspan="4"><img src="documentation/images/esphome_tylo_wiring_example.jpeg" alt="esphome-tylo wiring example" style="width:667px;height:auto;"></th>
+      <th><img src="documentation/images/esphome_tylo_wiring_example.jpeg" alt="esphome-tylo wiring example" style="width:667px;height:auto;"></th>
     </tr>
   </tbody>
 </table>
@@ -52,7 +55,7 @@ The external switch with LED feedback used in this project can be found [here](h
     <tr>
       <td>1</td>
       <td>A</td>
-      <th rowspan="4"><img src="documentation/images/pinout.jpeg" alt="Pinout"></th>
+      <th rowspan="4"><img src="documentation/images/pinout.jpeg" alt="Pinout" style="width:400px;height:auto;"></th>
     </tr>
     <tr>
       <td>2</td>
@@ -113,9 +116,9 @@ The external switch with LED feedback used in this project can be found [here](h
       <td>2, 3, 4</td>
       <td>Start/stop operation. 12VDC max. 40mA</td>
       <td>-</td>
-      <td>Led GND</td>
+      <td>LED GND</td>
       <td>Switch</td>
-      <td>Switch / Led 12V</td>
+      <td>Switch / LED 12V</td>
     </tr>
     <tr>
       <td>3 - DOOR SWITCH</td>
@@ -133,9 +136,9 @@ The external switch with LED feedback used in this project can be found [here](h
       <td>2, 3, 4</td>
       <td>12VDC max. 40mA.</td>
       <td>-</td>
-      <td>Led GND</td>
+      <td>LED GND</td>
       <td>Switch</td>
-      <td>Switch / Led 12V</td>
+      <td>Switch / LED 12V</td>
     </tr>
     <tr>
       <td>4 - SEC/NTC</td>
@@ -163,7 +166,7 @@ The external switch with LED feedback used in this project can be found [here](h
 <table>
   <tbody>
     <tr>
-      <th rowspan="4"><img src="documentation/images/wiring_diagram.jpeg" alt="Wirring Diagram" ></th>
+      <th><img src="documentation/images/wiring_diagram.jpeg" alt="Wirring Diagram" ></th>
     </tr>
   </tbody>
 </table>
@@ -330,6 +333,20 @@ As such, the list may not be complete or fully accurate. Further testing and val
     <tr>
       <td><code>0xB600</code></td>
       <td><strong>Sensor Errors</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+### Timing
+
+<p>Required timing to send <td><code>0x07</code> (Panel Command) to heater.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th><img src="documentation/images/timing.jpg" alt="timing measurement" style="width:667px;height:auto;"></th>
     </tr>
   </tbody>
 </table>
