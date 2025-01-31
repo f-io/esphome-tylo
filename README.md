@@ -1,4 +1,4 @@
-# Tylö Sense Pure
+# RS485 Interface for Tylö/Helo Sauna Heaters
 
 This interface was specifically developed and tested for the **Tylö Sense Pure** heater. Other Sauna360 heaters may also work, but compatibility is not guaranteed. This device does not emulate a panel and, therefore, cannot serve as a replacement.
 
