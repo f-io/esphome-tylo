@@ -8,7 +8,7 @@ This interface was specifically developed and tested for the **Tylö Sense Pure*
 
 ### MCU
 
-This project utilizes an **ESP32-S3 (ESP32-S3-WROOM-1)** paired with an external RS485-to-UART interface based on the **MAX485**. Although the **ESP32-C6** is theoretically capable of handling the task, **ESPHome** currently lacks support for suitable UART hardware interrupts.
+This project utilizes an **ESP32-S3 (ESP32-S3-WROOM-1)** paired with an external RS485-to-UART interface based on the **MAX485**.
 
 ### Door Sensor
 
@@ -340,16 +340,17 @@ As such, the list may not be complete or fully accurate. Further testing and val
 ---
 
 ### Timing
+On each bus cycle the heater emits a heartbeat. Under normal conditions the panel follows with its heartbeat about ≈600 µs later. When the panel needs to issue a command, it skips that heartbeat and instead transmits its command about ≈1.6 ms after the heater heartbeat.
 
-<p>Required timing to send <td><code>0x07</code> (Panel Command) to heater.</p>
+We transmit only when a panel heartbeat was observed. To avoid collisions we wait at least one byte-time at 19 200 baud (8E1)—about ≈0.57 ms—plus a small guard, then start our frame (typically ~615 µs after the panel heartbeat EOF).
 
-<table>
-  <tbody>
-    <tr>
-      <th><img src="documentation/images/timing.jpg" alt="timing measurement" style="width:667px;height:auto;"></th>
-    </tr>
-  </tbody>
-</table>
+<p>Measured timing to send <code>0x07</code> (Command) to heater via ESP32.</p>
+
+<p align="Left">
+  <img src="documentation/images/timing.jpg"
+       alt="timing measurement"
+       style="width:667px;height:auto;">
+</p>
 
 ---
 
