@@ -375,6 +375,8 @@ esphome:
 
 esp32:
   board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
 
 logger:
   level: WARN
