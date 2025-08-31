@@ -502,3 +502,13 @@ climate:
 ## Apple Homekit
 
 ![homekit](documentation/images/hk.png)
+
+## Prototype
+
+<table>
+  <tbody>
+    <tr>
+      <th><img src="documentation/images/prototype.png" alt="esp32-s3" style="width:667px;height:auto;"></th>
+    </tr>
+  </tbody>
+</table>
