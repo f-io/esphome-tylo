@@ -1,6 +1,6 @@
 # RS485 Interface for Tylö/Helo Sauna Heaters
 
-This interface was specifically developed and tested for the **Tylö Sense Pure** heater. Other Sauna360 heaters may also work, but compatibility is not guaranteed. This device does not emulate a panel and, therefore, cannot serve as a replacement.
+This interface was developed for and validated with the **Tylö Sense Pure** (Pure panel). Basic functions also worked in our tests with Combi and Elite setups, but full compatibility and feature coverage are not guaranteed. It does not emulate a control panel and cannot replace one.
 
 ---
 
@@ -290,59 +290,114 @@ As such, the list may not be complete or fully accurate. Further testing and val
   <thead>
     <tr>
       <th>Code</th>
+      <th>Direction</th>
       <th>Description</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><code>0x3400</code></td>
+      <td>Heater → Panel</td>
       <td><strong>Light and Heater Status</strong></td>
     </tr>
     <tr>
+      <td><code>0x3801</code></td>
+      <td>Heater → Panel</td>
+      <td><strong>Elite/Combi sensor frame</strong> (temp/RH data)</td>
+    </tr>
+    <tr>
       <td><code>0x4002</code></td>
+      <td>Both</td>
       <td><strong>Bath Time and Maximum Temperature</strong></td>
     </tr>
     <tr>
       <td><code>0x4003</code></td>
+      <td>Both</td>
       <td><strong>Overheating PCB Limit</strong></td>
     </tr>
     <tr>
+      <td><code>0x4200</code></td>
+      <td>Both</td>
+      <td><strong>Date/Time</strong></td>
+    </tr>
+    <tr>
+      <td><code>0x5200</code></td>
+      <td>Both</td>
+      <td><strong>Aux relay</strong></td>
+    </tr>
+    <tr>
+      <td><code>0x5201</code></td>
+      <td>Both</td>
+      <td><strong>Aux relay</strong> </td>
+    </tr>
+    <tr>
+      <td><code>0x5202</code></td>
+      <td>Both</td>
+      <td><strong>Aux relay</strong></td>
+    </tr>
+    <tr>
       <td><code>0x6000</code></td>
-      <td><strong>Temperature Data:</strong> Encodes current and target sauna temperature.</td>
+      <td>Both</td>
+      <td><strong>Temperature Data:</strong> Current and target sauna temperature</td>
+    </tr>
+    <tr>
+      <td><code>0x6001</code></td>
+      <td>Both</td>
+      <td><strong>Humidity control</strong></td>
     </tr>
     <tr>
       <td><code>0x7000</code></td>
-      <td><strong>Request Heater Status Changes:</strong> Panel -> Heater</td>
+      <td>Panel → Heater</td>
+      <td><strong>Request Heater Status Changes</strong></td>
     </tr>
     <tr>
       <td><code>0x7180</code></td>
-      <td><strong>Light and Heater Status:</strong> Heater -> Panel</td>
+      <td>Heater → Panel</td>
+      <td><strong>Relay/output bitmap</strong> (physical outputs X3–X18)</td>
+    </tr>
+    <tr>
+      <td><code>0x7280</code></td>
+      <td>Heater → Panel</td>
+      <td><strong>Tank level</strong></td>
+    </tr>
+    <tr>
+      <td><code>0x9000</code></td>
+      <td>Both</td>
+      <td><strong>Not-allowed start window</strong></td>
     </tr>
     <tr>
       <td><code>0x9400</code></td>
+      <td>Heater → Panel</td>
       <td><strong>Total Uptime</strong></td>
     </tr>
     <tr>
       <td><code>0x9401</code></td>
-      <td><strong>Remaining Time:</strong> Indicates the remaining time of the current sauna session.</td>
+      <td>Heater → Panel</td>
+      <td><strong>Remaining Bath Time</strong></td>
     </tr>
     <tr>
       <td><code>0xB000</code></td>
+      <td>Heater → Panel</td>
       <td><strong>Error Codes</strong></td>
     </tr>
     <tr>
       <td><code>0xB600</code></td>
+      <td>Heater → Panel</td>
       <td><strong>Sensor Errors</strong></td>
     </tr>
   </tbody>
 </table>
 
+
 ---
 
 ### Timing
-On each bus cycle the heater emits a heartbeat. Under normal conditions the panel follows with its heartbeat about ≈600 µs later. When the panel needs to issue a command, it skips that heartbeat and instead transmits its command about ≈1.6 ms after the heater heartbeat.
+On each bus cycle the **heater** emits a heartbeat. Under normal conditions the **panel** follows ≈600 µs later. If the panel needs to issue a command, it skips that heartbeat and sends its command ≈1.6 ms after the heater heartbeat.
 
-We transmit only when a panel heartbeat was observed. To avoid collisions we wait at least one byte-time at 19 200 baud (8E1)—about ≈0.57 ms—plus a small guard, then start our frame (typically ~615 µs after the panel heartbeat EOF).
+We transmit only after a **panel EOF**. To avoid collisions we wait at least one byte-time at 19 200 baud (8E1 ≈ 0.57 ms) plus a small guard on the **PURE** model, then start our frame (typically ~615 µs after the panel EOF).
+
+**COMBI / ELITE** behave slightly differently (likely due to the optional RS-485 humidity/temperature sensor). For these models we transmit ~7 100 µs after the panel EOF.
+
 
 <p>Measured timing to send <code>0x07</code> (Command) to heater via ESP32.</p>
 
@@ -358,141 +413,83 @@ We transmit only when a panel heartbeat was observed. To avoid collisions we wai
 
 ```yaml
 substitutions:
+  # — Device / Model -
   device_name: "tylo"
+  model_name: "pure"                 # pure | combi | elite
+  branch_ref: "main"                 # main | dev
 
-external_components:
-  - source:
-      type: git
-      url: https://github.com/f-io/esphome-tylo/
-      ref: main
-    refresh: 1s
-    components: [ sauna360 ]
-    
+  # — Area & Logging —
+  area_name: "Sauna"
+  log_level: "INFO"
+
+  # — Board / Flash (configurable) —
+  board_type: "esp32-s3-devkitc-1"   # "esp32-s3-devkitc-1", "lolin_s3"
+  flash_size: "16MB"                 # "4MB" | "8MB" | "16MB"
+
+  # — UART pins (if wired differently) —
+  uart_tx_pin: "GPIO41"
+  uart_rx_pin: "GPIO42"
+
+  # — Defaults for bath/temperature —
+  default_bath_temperature: "92"
+  default_bath_time: "240"
+  default_max_bath_temperature: "110"
+
+  # — Climate visuals —
+  min_temp_c: "40"
+  max_temp_c: "110"
+
+  # — Secrets from secrets.yaml —
+  api_encryption_key: !secret api_key_sauna
+  ota_password:       !secret ota_pass_sauna
+  wifi_ssid_sub:      !secret wifi_ssid
+  wifi_password_sub:  !secret wifi_password
+
 esphome:
   name: ${device_name}
   friendly_name: ${device_name}
   comment: ${device_name} sauna controller
-  area: Sauna
 
 esp32:
-  board: esp32-s3-devkitc-1
+  board: ${board_type}
+  flash_size: ${flash_size}
   framework:
     type: esp-idf
 
-logger:
-  level: WARN
-  baud_rate: 0
+external_components:
+  - source:
+      type: git
+      url: https://github.com/f-io/esphome-tylo
+      ref: ${branch_ref}
+    refresh: 1s
+    components: [ sauna360 ]
 
-api:
-  encryption:
-    key: ""
+packages:
+  base:
+    url: https://github.com/f-io/esphome-tylo
+    ref: main
+    refresh: 1s
+    files: ["packages/base.yaml"]
 
-ota:
-  - platform: esphome
-    password: ""
-
-wifi:
-  power_save_mode: NONE
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-
-uart:
-    tx_pin: GPIO41
-    rx_pin: GPIO42
-    baud_rate: 19200
-    data_bits: 8
-    parity: EVEN
-    stop_bits: 1
-
-sauna360:
-  id: sauna360_component
-
-binary_sensor:
-  - platform: sauna360
-    heater_status:
-      name: "Heater State"
-  - platform: sauna360
-    light_status:
-      name: "Light State"
-  - platform: sauna360
-    ready_status: 
-      name: "Ready State"
-
-sensor:
-  - platform: wifi_signal
-    name: "${device_name} WiFi Signal"
-    update_interval: 60s
-    icon: "mdi:wifi"
-  - platform: sauna360
-    id: current_temperature_sensor
-    current_temperature:
-      name: "Current Temperature"
-  - platform: sauna360
-    setting_temperature:
-      name: "Setting Temperature"
-  - platform: sauna360
-    remaining_time:
-      name: "Remaining Time"
-  - platform: sauna360
-    setting_bath_time:
-      name: "Setting Bath Time"
-  - platform: sauna360
-    total_uptime:
-      name: "Total Uptime"
-  - platform: sauna360
-    max_bath_temperature:
-      name: "Max Bath Temperature"
-  - platform: sauna360
-    overheating_pcb_limit:
-      name: "Overheating PCB Limit"
-
-number:
-  - platform: sauna360
-    bath_temperature:
-      name: "Bath Temperature"
-      id: bath_temperature
-      mode: box
-      bath_temperature_default: 90 # default value
-  - platform: sauna360
-    bath_time:
-      name: "Bath Time"
-      mode: box
-      bath_time_default: 300 # default value
-  - platform: sauna360
-    max_bath_temperature:
-      name: "Max Bath Temperature"
-      mode: box
-      max_bath_temperature_default: 110 # default value
-
-switch:
-  - platform: sauna360
-    light_relay:
-      name: "Light"
-  - platform: sauna360
-    heater_relay:
-      name: "Heater"
-      id: heater_relay_switch
-
-text_sensor:
-  - platform: sauna360
-    heater_state:
-      name: "Heating Element"
-
-time:
-  - platform: homeassistant
-
-climate:
-  - platform: sauna360
-    id: sauna_climate
-    name: "Sauna Climate"
-    sauna360_id: sauna360_component
-    bath_temperature_number_id: bath_temperature
-    heater_relay_id: heater_relay_switch
-    visual:
-        min_temperature: 40
-        max_temperature: 110
-        temperature_step: 1.0
+  model:
+    url: https://github.com/f-io/esphome-tylo
+    ref: main
+    refresh: 1s
+    files: ["models/pure.yaml"]               # pure.yaml | combi.yaml | elite.yaml
 ```
+
+# secrets.yaml (example)
+
+```yaml
+# Wi-Fi
+wifi_ssid: "YOUR_WIFI_SSID"
+wifi_password: "YOUR_WIFI_PASSWORD"
+
+# API & OTA for Sauna
+api_key_sauna: "REPLACE_WITH_BASE64_KEY"
+ota_pass_sauna: "REPLACE_WITH_STRONG_PASSWORD"
+```
+
 # Integration Example
 
 ## Home Assistant

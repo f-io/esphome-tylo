@@ -1,18 +1,21 @@
 #include "sauna360_sensor.h"
-#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
-namespace esphome
-{
-  namespace sauna360
-  {
-    static const char *const TAG = "SAUNA360.sensor";
+namespace esphome {
+namespace sauna360 {
 
-    void SAUNA360Sensor::dump_config()
-    {
-      ESP_LOGCONFIG(TAG, "SAUNA360 Sensor:");
-      LOG_SENSOR("  ", "Temperature", this->temperature_sensor_);
-    }
+static const char *const TAG = "SAUNA360.sensor";
 
-  } // namespace sauna360
-} // namespace esphome
+void SAUNA360Sensor::dump_config() {
+  ESP_LOGCONFIG(TAG, "SAUNA360 Sensor:");
+  LOG_SENSOR("  ", "Temperature",               this->temperature_sensor_);
+  LOG_SENSOR("  ", "Temperature Setting",       this->temperature_setting_sensor_);
+  LOG_SENSOR("  ", "Remaining Time (min)",      this->remaining_time_sensor_);
+  LOG_SENSOR("  ", "Setting Bath Time (min)",   this->bath_time_setting_sensor_);
+  LOG_SENSOR("  ", "Total Uptime (min)",        this->total_uptime_sensor_);
+  LOG_SENSOR("  ", "Max Bath Temperature (°C)", this->max_bath_temperature_sensor_);
+  LOG_SENSOR("  ", "Overheating PCB Limit (°C)",this->overheating_pcb_limit_sensor_);
+}
+
+}  // namespace sauna360
+}  // namespace esphome
