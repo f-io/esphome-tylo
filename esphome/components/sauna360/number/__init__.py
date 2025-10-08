@@ -10,8 +10,8 @@ from esphome.const import (
     ICON_WATER_PERCENT,
     DEVICE_CLASS_DURATION,
     DEVICE_CLASS_TEMPERATURE,
-
 )
+
 from .. import (
     sauna360_ns,
     SAUNA360Component,
@@ -21,7 +21,8 @@ from .. import (
 SAUNA360BathTimeNumber = sauna360_ns.class_("SAUNA360BathTimeNumber", number.Number)
 SAUNA360BathTemperatureNumber = sauna360_ns.class_("SAUNA360BathTemperatureNumber", number.Number)
 SAUNA360MaxBathTemperatureNumber = sauna360_ns.class_("SAUNA360MaxBathTemperatureNumber", number.Number)
-
+SAUNA360HumidityStepNumber = sauna360_ns.class_("SAUNA360HumidityStepNumber", number.Number)
+SAUNA360HumidityPercentNumber = sauna360_ns.class_("SAUNA360HumidityPercentNumber", number.Number)
 
 CONF_BATH_TIME = "bath_time"
 CONF_BATH_TIME_DEFAULT = "bath_time_default"
@@ -29,6 +30,11 @@ CONF_BATH_TEMPERATURE = "bath_temperature"
 CONF_BATH_TEMPERATURE_DEFAULT = "bath_temperature_default"
 CONF_MAX_BATH_TEMPERATURE = "max_bath_temperature"
 CONF_MAX_BATH_TEMPERATURE_DEFAULT = "max_bath_temperature_default"
+
+CONF_HUMIDITY_STEP = "humidity_step"
+CONF_HUMIDITY_STEP_DEFAULT = "humidity_step_default"
+CONF_HUMIDITY_PERCENT = "humidity_percent"
+CONF_HUMIDITY_PERCENT_DEFAULT = "humidity_percent_default"
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -63,35 +69,58 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Optional(CONF_MAX_BATH_TEMPERATURE_DEFAULT): cv.float_range(min=40, max=110),
             }
         ),
+        cv.Optional(CONF_HUMIDITY_STEP): number.number_schema(
+            SAUNA360HumidityStepNumber,
+            unit_of_measurement=UNIT_EMPTY,
+            icon=ICON_WATER_PERCENT,
+        ).extend(
+            {
+                cv.Optional(CONF_HUMIDITY_STEP_DEFAULT): cv.float_range(min=0, max=10),
+            }
+        ),
+        cv.Optional(CONF_HUMIDITY_PERCENT): number.number_schema(
+            SAUNA360HumidityPercentNumber,
+            unit_of_measurement="%",
+            icon=ICON_WATER_PERCENT,
+        ).extend(
+            {
+                cv.Optional(CONF_HUMIDITY_PERCENT_DEFAULT): cv.float_range(min=0, max=100),
+            }
+        ),
     }
 )
 
 async def to_code(config):
     sauna360_component = await cg.get_variable(config[CONF_SAUNA360_ID])
     if bath_time := config.get(CONF_BATH_TIME):
-      n = await number.new_number(
-        bath_time, min_value=1, max_value=360, step=1,
-      )
-      await cg.register_parented(n, sauna360_component)
-      cg.add(sauna360_component.set_bath_time_number(n))
-      if CONF_BATH_TIME_DEFAULT in bath_time:
-        cg.add(sauna360_component.set_bath_time_default_value(bath_time[CONF_BATH_TIME_DEFAULT])
-      )   
+        n = await number.new_number(bath_time, min_value=1, max_value=360, step=1)
+        await cg.register_parented(n, sauna360_component)
+        cg.add(sauna360_component.set_bath_time_number(n))
+        if CONF_BATH_TIME_DEFAULT in bath_time:
+            cg.add(sauna360_component.set_bath_time_default_value(bath_time[CONF_BATH_TIME_DEFAULT]))
+
     if bath_temperature := config.get(CONF_BATH_TEMPERATURE):
-      n = await number.new_number(
-        bath_temperature, min_value=40, max_value=110, step=1,
-      )
-      await cg.register_parented(n, sauna360_component)
-      cg.add(sauna360_component.set_bath_temperature_number(n))
-      if CONF_BATH_TEMPERATURE_DEFAULT in bath_temperature:
-        cg.add(sauna360_component.set_bath_temperature_default_value(bath_temperature[CONF_BATH_TEMPERATURE_DEFAULT])
-      )        
+        n = await number.new_number(bath_temperature, min_value=40, max_value=110, step=1)
+        await cg.register_parented(n, sauna360_component)
+        cg.add(sauna360_component.set_bath_temperature_number(n))
+        if CONF_BATH_TEMPERATURE_DEFAULT in bath_temperature:
+            cg.add(sauna360_component.set_bath_temperature_default_value(bath_temperature[CONF_BATH_TEMPERATURE_DEFAULT]))
+
     if max_bath_temperature := config.get(CONF_MAX_BATH_TEMPERATURE):
-      n = await number.new_number(
-        max_bath_temperature, min_value=40, max_value=110, step=1,
-      )
-      await cg.register_parented(n, sauna360_component)
-      cg.add(sauna360_component.set_max_bath_temperature_number(n))
-      if CONF_MAX_BATH_TEMPERATURE_DEFAULT in max_bath_temperature:
-        cg.add(sauna360_component.set_max_bath_temperature_default_value(max_bath_temperature[CONF_MAX_BATH_TEMPERATURE_DEFAULT])
-      )
+        n = await number.new_number(max_bath_temperature, min_value=40, max_value=110, step=1)
+        await cg.register_parented(n, sauna360_component)
+        cg.add(sauna360_component.set_max_bath_temperature_number(n))
+        if CONF_MAX_BATH_TEMPERATURE_DEFAULT in max_bath_temperature:
+            cg.add(sauna360_component.set_max_bath_temperature_default_value(max_bath_temperature[CONF_MAX_BATH_TEMPERATURE_DEFAULT]))
+    if humidity_step := config.get(CONF_HUMIDITY_STEP):
+        n = await number.new_number(humidity_step, min_value=0, max_value=10, step=1)
+        await cg.register_parented(n, sauna360_component)
+        cg.add(sauna360_component.set_humidity_step_number(n))
+        if CONF_HUMIDITY_STEP_DEFAULT in humidity_step:
+            cg.add(sauna360_component.set_humidity_step_default_value(humidity_step[CONF_HUMIDITY_STEP_DEFAULT]))
+    if humidity_percent := config.get(CONF_HUMIDITY_PERCENT):
+        n = await number.new_number(humidity_percent, min_value=0, max_value=100, step=1)
+        await cg.register_parented(n, sauna360_component)
+        cg.add(sauna360_component.set_humidity_percent_number(n))
+        if CONF_HUMIDITY_PERCENT_DEFAULT in humidity_percent:
+            cg.add(sauna360_component.set_humidity_percent_default_value(humidity_percent[CONF_HUMIDITY_PERCENT_DEFAULT]))

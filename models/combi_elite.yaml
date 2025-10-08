@@ -1,0 +1,15 @@
+# COMBI_ELITE overlay (0–100%)
+sensor:
+  - platform: sauna360
+    setting_humidity:
+      name: "Setting Humidity"
+  - platform: sauna360
+    water_tank_level:
+      name: "Water Tank Level"
+
+number:
+  - platform: sauna360
+    humidity_percent:
+      name: "Humidity"
+      mode: box
+      humidity_percent_default: ${default_humidity_percent}

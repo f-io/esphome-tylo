@@ -444,7 +444,7 @@ We transmit only after a **panel EOF**. To avoid collisions we wait at least one
 substitutions:
   # — Device / Model -
   device_name: "tylo"
-  model_name: "pure"                 # pure | combi | elite
+  model_name: "pure"                 # pure | combi | elite | combi_elite
   branch_ref: "main"                 # main | dev
 
   # — Area & Logging —
@@ -454,7 +454,7 @@ substitutions:
   # — Board / Flash (configurable) —
   board_type: "esp32-s3-devkitc-1"   # "esp32-s3-devkitc-1", "lolin_s3"
   flash_size: "16MB"                 # "4MB" | "8MB" | "16MB"
-  rgb_led_pin: GPIO38                # devkitc-1=GPIO38|GPIO48, Atom S3=GPIO35
+  rgb_led_pin: GPIO38                # devkitc-1 = GPIO38 | Atom S3 lite = GPIO35
   led_brightness_connected: "30"     # 0..100; 0 = OFF
 
   # — UART pins (if wired differently) —
@@ -465,6 +465,10 @@ substitutions:
   default_bath_temperature: "92"
   default_bath_time: "240"
   default_max_bath_temperature: "110"
+
+  # — Defaults for Humidity settings —
+  default_humidity_step: "0"      # 0..10 - COMBI
+  default_humidity_percent: "0"   # 0..100 - COMBI_ELITE
 
   # — Climate visuals —
   min_temp_c: "40"
@@ -480,15 +484,6 @@ esphome:
   name: ${device_name}
   friendly_name: ${device_name}
   comment: ${device_name} sauna controller
-  on_boot:
-    priority: 600
-    then:
-      - light.turn_on:
-          id: status_rgb
-          brightness: !lambda 'return ${led_brightness_connected} / 100.0;'
-          red: 100%
-          green: 100%
-          blue: 100%
 
 esp32:
   board: ${board_type}
@@ -511,11 +506,17 @@ packages:
     refresh: 1s
     files: ["packages/base.yaml"]
 
+  led:
+   url: https://github.com/f-io/esphome-tylo
+   ref: main
+   refresh: 1s
+   files: ["packages/led.yaml"]
+
   model:
     url: https://github.com/f-io/esphome-tylo
     ref: main
     refresh: 1s
-    files: ["models/pure.yaml"]               # pure.yaml | combi.yaml | elite.yaml
+    files: ["models/pure.yaml"]     # pure | combi | elite | combi_elite
 ```
 
 # secrets.yaml (example)

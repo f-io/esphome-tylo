@@ -54,7 +54,7 @@ public:
   void set_total_uptime_sensor(sensor::Sensor *s) {
     this->total_uptime_sensor_ = s;
   }
-  void on_total_uptime(uint32_t v) override { // <-- uint32_t!
+  void on_total_uptime(uint32_t v) override {
     if (this->total_uptime_sensor_ != nullptr) {
       if (this->total_uptime_sensor_->get_state() != static_cast<float>(v))
         this->total_uptime_sensor_->publish_state(static_cast<float>(v));
@@ -81,6 +81,36 @@ public:
     }
   }
 
+  void set_setting_humidity_step_sensor(sensor::Sensor *s) {
+    this->setting_humidity_step_sensor_ = s;
+  }
+  void on_setting_humidity_step(uint16_t v) override {
+    if (this->setting_humidity_step_sensor_ != nullptr) {
+      if (this->setting_humidity_step_sensor_->get_state() != v)
+        this->setting_humidity_step_sensor_->publish_state(v);
+    }
+  }
+
+  void set_setting_humidity_percent_sensor(sensor::Sensor *s) {
+    this->setting_humidity_percent_sensor_ = s;
+  }
+  void on_setting_humidity_percent(uint16_t v) override {
+    if (this->setting_humidity_percent_sensor_ != nullptr) {
+      if (this->setting_humidity_percent_sensor_->get_state() != v)
+        this->setting_humidity_percent_sensor_->publish_state(v);
+    }
+  }
+
+  void set_water_tank_level_sensor(sensor::Sensor *s) {
+    this->water_tank_level_sensor_ = s;
+  }
+  void on_water_tank_level(uint16_t v) override {
+    if (this->water_tank_level_sensor_ != nullptr) {
+      if (this->water_tank_level_sensor_->get_state() != v)
+        this->water_tank_level_sensor_->publish_state(v);
+    }
+  }
+
 protected:
   sensor::Sensor *temperature_sensor_{nullptr};
   sensor::Sensor *temperature_setting_sensor_{nullptr};
@@ -89,6 +119,9 @@ protected:
   sensor::Sensor *total_uptime_sensor_{nullptr};
   sensor::Sensor *max_bath_temperature_sensor_{nullptr};
   sensor::Sensor *overheating_pcb_limit_sensor_{nullptr};
+  sensor::Sensor *setting_humidity_step_sensor_{nullptr};
+  sensor::Sensor *setting_humidity_percent_sensor_{nullptr};
+  sensor::Sensor *water_tank_level_sensor_{nullptr};
 };
 
 } // namespace sauna360

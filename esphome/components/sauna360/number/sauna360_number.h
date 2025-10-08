@@ -35,5 +35,23 @@ namespace esphome
       void control(float value) override;
     };
 
+    class SAUNA360HumidityStepNumber : public number::Number, public Parented<SAUNA360Component>
+    {
+    public:
+      SAUNA360HumidityStepNumber() = default;
+
+    protected:
+      void control(float value) override;
+    };
+
+    class SAUNA360HumidityPercentNumber : public number::Number, public Parented<SAUNA360Component>
+    {
+    public:
+      SAUNA360HumidityPercentNumber() = default;
+
+    protected:
+      void control(float value) override;
+    };
+
   } // namespace sauna360
 } // namespace esphome

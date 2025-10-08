@@ -1,4 +1,5 @@
 #include "sauna360_sensor.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -15,6 +16,9 @@ void SAUNA360Sensor::dump_config() {
   LOG_SENSOR("  ", "Total Uptime (min)",        this->total_uptime_sensor_);
   LOG_SENSOR("  ", "Max Bath Temperature (°C)", this->max_bath_temperature_sensor_);
   LOG_SENSOR("  ", "Overheating PCB Limit (°C)",this->overheating_pcb_limit_sensor_);
+  LOG_SENSOR("  ", "Setting Humidity Step",     this->setting_humidity_step_sensor_);
+  LOG_SENSOR("  ", "Setting Humidity (%)",      this->setting_humidity_percent_sensor_);
+  LOG_SENSOR("  ", "Water Tank Level (%)",      this->water_tank_level_sensor_);
 }
 
 }  // namespace sauna360

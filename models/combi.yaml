@@ -1,15 +1,15 @@
-# COMBI overlay:
+# COMBI overlay (Steps 0–10)
 sensor:
   - platform: sauna360
-    humidity_setting:
-      name: "Setting Humidity Step"   # 0–10
-  - platform: sauna360 
-    water_level: 
+    setting_humidity_step:
+      name: "Setting Humidity Step"
+  - platform: sauna360
+    water_tank_level:
       name: "Water Tank Level"
 
 number:
   - platform: sauna360
     humidity_step:
-      name: "Humidity Step"           # 0–10
+      name: "Humidity Step"
       mode: box
-      humidity_step_default: 1
+      humidity_step_default: ${default_humidity_step}

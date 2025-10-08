@@ -25,9 +25,25 @@ static const char *TAG = "sauna360";
 void SAUNA360Component::setup() {
   this->min_ifg_us_ = (this->mode_ == Mode::PURE) ? 520 : 7000;
 
-  const char *mode_str = (this->mode_ == Mode::PURE)    ? "PURE"
-                         : (this->mode_ == Mode::COMBI) ? "COMBI"
-                                                        : "ELITE";
+  const char *mode_str = nullptr;
+  switch (this->mode_) {
+  case Mode::PURE:
+    mode_str = "PURE";
+    break;
+  case Mode::COMBI:
+    mode_str = "COMBI";
+    break;
+  case Mode::ELITE:
+    mode_str = "ELITE";
+    break;
+  case Mode::COMBI_ELITE:
+    mode_str = "COMBI_ELITE";
+    break;
+  default:
+    mode_str = "PURE";
+    break;
+  }
+
   ESP_LOGI(TAG, "IFG selected: %d us (%s)", this->min_ifg_us_, mode_str);
 
   // Model-specific bitmasks
@@ -36,7 +52,7 @@ void SAUNA360Component::setup() {
     this->LIGHT_MASK_ = 0x00020000; // bit 17
     this->COILS_MASK_ = 0x0001C000; // bits 16..14
     this->COILS_SHIFT_ = 14;
-    // ELITE and COMBI
+    // COMBI, ELITE, COMBI_ELITE
   } else {
     this->LIGHT_MASK_ = 0x00000020; // bit 5
     this->COILS_MASK_ = 0x00000007; // bits 2..0
@@ -455,13 +471,55 @@ void SAUNA360Component::process_temperature(uint32_t data) {
 }
 
 void SAUNA360Component::process_humidity_control(uint32_t data) {
+  // Cache context for future TX on 0x6001
+  this->humidity_received_hex_ = data;
   if ((data & 0xF0000000) == 0) {
+    // Step mode: keep priority bits
+    this->bath_type_priority_received_hex_ = (data & 0x0000F000);
+  } else {
+    // Percent mode: keep high nibble + priority + flags per observed frames
+    this->bath_type_priority_received_hex_ = (data & 0xF000C000);
+  }
+
+  if ((data & 0xF0000000) == 0) {
+    // --- STEP MODE (0..10) ---
     int raw = static_cast<int>((data >> 4) & 0xFF);
-    int step = (raw - 40) / 8;
+    int step = (raw - HUM_STEP_BASE) / HUM_STEP_SCALE;
+    if (step < 0)
+      step = 0;
+    if (step > 10)
+      step = 10;
+
+    for (auto &listener : listeners_)
+      listener->on_setting_humidity_step(static_cast<uint16_t>(step));
+
+#ifdef USE_NUMBER
+    if (this->humidity_step_number_ != nullptr) {
+      if (this->humidity_step_number_->state != static_cast<float>(step))
+        this->humidity_step_number_->publish_state(static_cast<float>(step));
+    }
+#endif
     ESP_LOGI(TAG, "Humidity step: %d", step);
   } else {
+    // --- PERCENT MODE (0..63 encoded) ---
     int target_pct = static_cast<int>((data >> 7) & 0x3F);
     int current_pct = static_cast<int>(data & 0x7F);
+    if (target_pct < 0)
+      target_pct = 0;
+    if (target_pct > 100)
+      target_pct = 100;
+
+    for (auto &listener : listeners_)
+      listener->on_setting_humidity_percent(static_cast<uint16_t>(target_pct));
+
+#ifdef USE_NUMBER
+    if (this->humidity_percent_number_ != nullptr) {
+      if (this->humidity_percent_number_->state !=
+          static_cast<float>(target_pct))
+        this->humidity_percent_number_->publish_state(
+            static_cast<float>(target_pct));
+    }
+#endif
     ESP_LOGI(TAG, "Humidity: target %d%%, current %d%%", target_pct,
              current_pct);
   }
@@ -605,6 +663,10 @@ void SAUNA360Component::process_tank_level(uint32_t data) {
     return;
   }
   ESP_LOGI(TAG, "Tank level: %d%%", level_pct);
+
+  for (auto &listener : listeners_) {
+    listener->on_water_tank_level(static_cast<uint16_t>(level_pct));
+  }
 }
 
 void SAUNA360Component::process_time_limit(uint32_t data) {
@@ -796,6 +858,41 @@ void SAUNA360Component::set_heater_relay(bool enable) {
   ESP_LOGI(TAG, "HEATER toggle sent (target=%s)", enable ? "ON" : "OFF");
 }
 
+void SAUNA360Component::set_humidity_step_number(float value) {
+  int v = static_cast<int>(std::lround(value));
+  if (v < 0)
+    v = 0;
+  if (v > 10)
+    v = 10;
+
+  uint32_t payload = (this->bath_type_priority_received_hex_ & 0x0FFFFFFF);
+
+  uint32_t raw =
+      static_cast<uint32_t>(v * HUM_STEP_SCALE + HUM_STEP_BASE) & 0xFF;
+  payload &= ~(0xFFu << 4);
+  payload |= (raw << 4);
+
+  this->create_send_data_(0x07, 0x6001, payload);
+  ESP_LOGI(TAG, "SENT: Humidity step: %d (payload=0x%08X)", v, payload);
+}
+
+void SAUNA360Component::set_humidity_percent_number(float value) {
+  int v = static_cast<int>(std::lround(value));
+  if (v < 0)
+    v = 0;
+  if (v > 63)
+    v = 63;
+
+  uint32_t payload = this->bath_type_priority_received_hex_;
+  payload |= 0x10000000u; // ensure percent mode
+
+  payload &= ~(0x3Fu << 7);
+  payload |= (static_cast<uint32_t>(v) & 0x3F) << 7;
+
+  this->create_send_data_(0x07, 0x6001, payload);
+  ESP_LOGI(TAG, "SENT: Humidity target (%%): %d (payload=0x%08X)", v, payload);
+}
+
 void SAUNA360Component::create_send_data_(uint8_t type, uint16_t code,
                                           uint32_t data) {
   ESP_LOGD(TAG, "CREATING SEND DATA TYPE:%s CODE:%s DATA:%s",
@@ -829,19 +926,39 @@ void SAUNA360Component::send_data_() {
 
 void SAUNA360Component::initialize_defaults() {
   ESP_LOGI(TAG, "=========== Queueing default values ===========");
-  ESP_LOGI(TAG, "Max bath temperature: %.0f°C", max_bath_temperature_default_);
-  ESP_LOGI(TAG, "Bath time: %.0f minutes", bath_time_default_);
-  ESP_LOGI(TAG, "Bath temperature: %.0f°C", bath_temperature_default_);
+  if (!std::isnan(this->max_bath_temperature_default_))
+    ESP_LOGI(TAG, "Max bath temperature: %.0f°C",
+             this->max_bath_temperature_default_);
+  if (!std::isnan(this->bath_time_default_))
+    ESP_LOGI(TAG, "Bath time: %.0f minutes", this->bath_time_default_);
+  if (!std::isnan(this->bath_temperature_default_))
+    ESP_LOGI(TAG, "Bath temperature: %.0f°C", this->bath_temperature_default_);
+  if (!std::isnan(this->humidity_step_default_))
+    ESP_LOGI(TAG, "Humidity step: %.0f", this->humidity_step_default_);
+#ifdef USE_NUMBER
+  if (!std::isnan(this->humidity_percent_default_))
+    ESP_LOGI(TAG, "Humidity percent: %.0f%%", this->humidity_percent_default_);
+#endif
   ESP_LOGI(TAG, "================================================");
 
   if (!std::isnan(this->bath_time_default_))
-    this->set_bath_time_number(bath_time_default_);
+    this->set_bath_time_number(this->bath_time_default_);
 
   if (!std::isnan(this->max_bath_temperature_default_))
-    this->set_max_bath_temperature_number(max_bath_temperature_default_);
+    this->set_max_bath_temperature_number(this->max_bath_temperature_default_);
 
   if (!std::isnan(this->bath_temperature_default_))
-    this->set_bath_temperature_number(bath_temperature_default_);
+    this->set_bath_temperature_number(this->bath_temperature_default_);
+
+  if (this->humidity_step_number_ != nullptr &&
+      !std::isnan(this->humidity_step_default_))
+    this->set_humidity_step_number(this->humidity_step_default_);
+
+#ifdef USE_NUMBER
+  if (this->humidity_percent_number_ != nullptr &&
+      !std::isnan(this->humidity_percent_default_))
+    this->set_humidity_percent_number(this->humidity_percent_default_);
+#endif
 }
 
 void SAUNA360Component::dump_config() { ESP_LOGCONFIG(TAG, "UART component"); }
