@@ -10,9 +10,32 @@ ota:
   - platform: esphome
     password: ${ota_password}
 
+light:
+  - platform: esp32_rmt_led_strip
+    id: status_rgb
+    chipset: WS2812
+    rgb_order: GRB
+    pin: ${rgb_led_pin}
+    num_leds: 1
+    internal: true    
+
 wifi:
   ssid: ${wifi_ssid_sub}
   password: ${wifi_password_sub}
+  on_connect:
+    - light.turn_on:
+        id: status_rgb
+        brightness: !lambda 'return ${led_brightness_connected} / 100.0;'
+        red: 0%
+        green: 100%
+        blue: 0% 
+  on_disconnect:
+    - light.turn_on:
+        id: status_rgb
+        brightness: 100%
+        red: 100%
+        green: 0%
+        blue: 0%
 
 uart:
   tx_pin: ${uart_tx_pin}

@@ -425,6 +425,8 @@ substitutions:
   # — Board / Flash (configurable) —
   board_type: "esp32-s3-devkitc-1"   # "esp32-s3-devkitc-1", "lolin_s3"
   flash_size: "16MB"                 # "4MB" | "8MB" | "16MB"
+  rgb_led_pin: GPIO38                # devkitc-1=GPIO38|GPIO48, Atom S3=GPIO35
+  led_brightness_connected: "30"     # 0..100; 0 = OFF
 
   # — UART pins (if wired differently) —
   uart_tx_pin: "GPIO41"
@@ -449,6 +451,15 @@ esphome:
   name: ${device_name}
   friendly_name: ${device_name}
   comment: ${device_name} sauna controller
+  on_boot:
+    priority: 600
+    then:
+      - light.turn_on:
+          id: status_rgb
+          brightness: !lambda 'return ${led_brightness_connected} / 100.0;'
+          red: 100%
+          green: 100%
+          blue: 100%
 
 esp32:
   board: ${board_type}
