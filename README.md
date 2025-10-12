@@ -41,6 +41,35 @@ The external switch with LED feedback used in this project can be found [here](h
 
 ---
 
+### Example Setups & Hardware Used For Testing
+
+<table>
+  <thead>
+    <tr>
+      <th>Lolin S3 / ESP32-S3-DevKitC-1 (no termination)</th>
+      <th>AtomS3 Lite + Tail485 (termination 68&nbsp;&Omega;)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center">
+        <img src="documentation/images/prototype.png"
+             alt="Tested with Lolin S3 (ESP32-S3-DevKitC-1)"
+             width="450" style="max-width:100%;height:auto"
+             loading="lazy" decoding="async">
+      </td>
+      <td align="center">
+        <img src="documentation/images/atom_s3_lite.png"
+             alt="Tested with AtomS3 Lite + Tail485 (68&nbsp;&Omega; termination)"
+             width="450" style="max-width:100%;height:auto"
+             loading="lazy" decoding="async">
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
 ### Connector Pinout (Western Connector 4P4C)
 
 <table>
@@ -511,12 +540,3 @@ ota_pass_sauna: "REPLACE_WITH_STRONG_PASSWORD"
 
 ![homekit](documentation/images/hk.png)
 
-## Prototype
-
-<table>
-  <tbody>
-    <tr>
-      <th><img src="documentation/images/prototype.png" alt="esp32-s3" style="width:667px;height:auto;"></th>
-    </tr>
-  </tbody>
-</table>
