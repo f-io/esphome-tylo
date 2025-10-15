@@ -111,6 +111,17 @@ public:
     }
   }
 
+  void set_session_uptime_sensor(sensor::Sensor *s) {
+    this->session_uptime_sensor_ = s;
+  }
+  void on_session_uptime(uint32_t v) override {
+    if (this->session_uptime_sensor_ != nullptr) {
+      float fv = static_cast<float>(v);
+      if (this->session_uptime_sensor_->get_state() != fv)
+        this->session_uptime_sensor_->publish_state(fv);
+    }
+  }
+
 protected:
   sensor::Sensor *temperature_sensor_{nullptr};
   sensor::Sensor *temperature_setting_sensor_{nullptr};
@@ -122,6 +133,7 @@ protected:
   sensor::Sensor *setting_humidity_step_sensor_{nullptr};
   sensor::Sensor *setting_humidity_percent_sensor_{nullptr};
   sensor::Sensor *water_tank_level_sensor_{nullptr};
+  sensor::Sensor *session_uptime_sensor_{nullptr};
 };
 
 } // namespace sauna360

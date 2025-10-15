@@ -1,15 +1,9 @@
 import esphome.codegen as cg
 from esphome.components import text_sensor
 import esphome.config_validation as cv
-from esphome.const import (
-    CONF_ID,
-)
+from esphome.const import CONF_ID
 
-from .. import (
-    sauna360_ns,
-    SAUNA360Component,
-    CONF_SAUNA360_ID,
-)
+from .. import sauna360_ns, SAUNA360Component, CONF_SAUNA360_ID
 
 SAUNA360TextSensor = sauna360_ns.class_("SAUNA360TextSensor", text_sensor.TextSensor, cg.Component)
 

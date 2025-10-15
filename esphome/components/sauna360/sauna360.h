@@ -50,6 +50,8 @@ public:
   virtual void on_setting_humidity_step(uint16_t) {};
   virtual void on_setting_humidity_percent(uint16_t) {};
   virtual void on_water_tank_level(uint16_t) {};
+  virtual void on_session_uptime(uint32_t) {};
+  virtual void on_session_uptime_text(const std::string &) {};
   int current_target_temperature = -1;
 };
 
@@ -173,6 +175,13 @@ protected:
 
   int decode_bath_time_minutes_(uint16_t raw12) const;
   int encode_bath_time_raw_(int target_minutes) const;
+
+  bool session_active_{false};
+  uint32_t session_start_ms_{0};
+  uint32_t session_frozen_s_{0};
+  uint32_t last_session_pub_ms_{0};
+
+  void publish_session_();
 };
 
 } // namespace sauna360

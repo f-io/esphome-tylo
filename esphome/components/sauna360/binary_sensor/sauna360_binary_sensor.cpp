@@ -7,7 +7,7 @@ namespace esphome
   namespace sauna360
   {
 
-    static const char *const TAG = "SAUNA360.binary_sensor";
+    static const char *const TAG = "sauna360.binary_sensor";
 
     void SAUNA360BinarySensor::dump_config()
     {

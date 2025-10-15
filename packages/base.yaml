@@ -30,40 +30,57 @@ binary_sensor:
   - platform: sauna360
     heater_status:
       name: "Heater State"
+
   - platform: sauna360
     light_status:
       name: "Light State"
+
   - platform: sauna360
     ready_status:
       name: "Ready State"
 
 sensor:
+  - platform: uptime
+    name: "${device_name} ESP Uptime"
+    update_interval: 1s
+
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
     update_interval: 60s
     icon: "mdi:wifi"
+
   - platform: sauna360
     id: current_temperature_sensor
     current_temperature:
       name: "Current Temperature"
+
   - platform: sauna360
     setting_temperature:
       name: "Setting Temperature"
+
   - platform: sauna360
     remaining_time:
       name: "Remaining Time"
+
   - platform: sauna360
     setting_bath_time:
       name: "Setting Bath Time"
+
   - platform: sauna360
     total_uptime:
       name: "Total Uptime"
+
   - platform: sauna360
     max_bath_temperature:
       name: "Max Bath Temperature"
+
   - platform: sauna360
     overheating_pcb_limit:
       name: "Overheating PCB Limit"
+
+  - platform: sauna360
+    session_uptime:
+      name: "Heater Session Uptime"
 
 number:
   - platform: sauna360

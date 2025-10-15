@@ -130,7 +130,13 @@ void SAUNA360Component::setup() {
 }
 
 void SAUNA360Component::loop() {
-  // nothing to do
+  const uint32_t now = millis();
+  if ((now - this->last_session_pub_ms_) >= 1000u) {
+    if (this->session_active_) {
+      this->publish_session_();
+    }
+    this->last_session_pub_ms_ = now;
+  }
 }
 
 void SAUNA360Component::handle_byte_(uint8_t c) {
@@ -602,6 +608,22 @@ void SAUNA360Component::process_relay_bitmap(uint32_t data) {
     }
   }
 
+  // Session timer: track OFF -> ON and ON -> OFF
+  if (!prev_heater_on && heater_enabled) {
+    this->session_active_ = true;
+    this->session_start_ms_ = millis();
+    this->session_frozen_s_ = 0;
+    this->last_session_pub_ms_ = millis();
+    this->publish_session_();
+  } else if (prev_heater_on && !heater_enabled) {
+    if (this->session_active_) {
+      const uint32_t now = millis();
+      this->session_frozen_s_ = (now - this->session_start_ms_) / 1000u;
+      this->session_active_ = false;
+      this->publish_session_();
+    }
+  }
+
   // Publish to HA switches
   if (this->light_relay_switch_ != nullptr)
     this->light_relay_switch_->publish_state(light_on);
@@ -924,6 +946,23 @@ void SAUNA360Component::send_data_() {
   this->tx_queue_.pop();
 }
 
+void SAUNA360Component::publish_session_() {
+  const uint32_t s = this->session_active_
+                       ? ((millis() - this->session_start_ms_) / 1000u)
+                       : this->session_frozen_s_;
+  const uint32_t m = s / 60u;
+
+  static uint32_t last_sent_min = 0xFFFFFFFFu;
+  if (this->session_active_) {
+    if (m == last_sent_min) return;
+  }
+  last_sent_min = m;
+
+  for (auto &l : this->listeners_) {
+    l->on_session_uptime(m);
+  }
+}
+
 void SAUNA360Component::initialize_defaults() {
   ESP_LOGI(TAG, "=========== Queueing default values ===========");
   if (!std::isnan(this->max_bath_temperature_default_))
@@ -961,7 +1000,10 @@ void SAUNA360Component::initialize_defaults() {
 #endif
 }
 
-void SAUNA360Component::dump_config() { ESP_LOGCONFIG(TAG, "UART component"); }
+void SAUNA360Component::dump_config() {
+  ESP_LOGCONFIG(TAG, "UART component");
+  ESP_LOGCONFIG(TAG, "Session timer: enabled");
+}
 
 } // namespace sauna360
 } // namespace esphome
