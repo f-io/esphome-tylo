@@ -147,8 +147,11 @@ protected:
   uint32_t overheating_pcb_limit_received_hex_{0};
   uint32_t humidity_received_hex_{0};
   uint32_t bath_type_priority_received_hex_{0};
-  int last_humidity_step_target_{-1};
   uint32_t last_humidity_step_set_ms_{0};
+  int last_humidity_step_target_{-1};
+  bool humidity_step_published_{false};
+  bool humidity_percent_published_{false};
+
   static constexpr int HUM_STEP_BASE = 40;
   static constexpr int HUM_STEP_SCALE = 8;
 

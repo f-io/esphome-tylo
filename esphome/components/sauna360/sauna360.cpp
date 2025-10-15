@@ -477,18 +477,17 @@ void SAUNA360Component::process_temperature(uint32_t data) {
 }
 
 void SAUNA360Component::process_humidity_control(uint32_t data) {
-  // Cache context for future TX on 0x6001
   this->humidity_received_hex_ = data;
   if ((data & 0xF0000000) == 0) {
     // Step mode: keep priority bits
     this->bath_type_priority_received_hex_ = (data & 0x0000F000);
   } else {
-    // Percent mode: keep high nibble + priority + flags per observed frames
+    // Percent mode: keep high nibble + priority + flags
     this->bath_type_priority_received_hex_ = (data & 0xF000C000);
   }
 
   if ((data & 0xF0000000) == 0) {
-    // --- STEP MODE (0..10) ---
+    // STEP MODE (0..10) ---
     int raw = static_cast<int>((data >> 4) & 0xFF);
     int step = (raw - HUM_STEP_BASE) / HUM_STEP_SCALE;
     if (step < 0)
@@ -501,13 +500,17 @@ void SAUNA360Component::process_humidity_control(uint32_t data) {
 
 #ifdef USE_NUMBER
     if (this->humidity_step_number_ != nullptr) {
-      if (this->humidity_step_number_->state != static_cast<float>(step))
-        this->humidity_step_number_->publish_state(static_cast<float>(step));
+      const float fstep = static_cast<float>(step);
+      if (!this->humidity_step_published_ ||
+          this->humidity_step_number_->state != fstep) {
+        this->humidity_step_number_->publish_state(fstep);
+        this->humidity_step_published_ = true;
+      }
     }
 #endif
     ESP_LOGI(TAG, "Humidity step: %d", step);
   } else {
-    // --- PERCENT MODE (0..63 encoded) ---
+    // % MODE (0..63 encoded)
     int target_pct = static_cast<int>((data >> 7) & 0x3F);
     int current_pct = static_cast<int>(data & 0x7F);
     if (target_pct < 0)
@@ -520,10 +523,12 @@ void SAUNA360Component::process_humidity_control(uint32_t data) {
 
 #ifdef USE_NUMBER
     if (this->humidity_percent_number_ != nullptr) {
-      if (this->humidity_percent_number_->state !=
-          static_cast<float>(target_pct))
-        this->humidity_percent_number_->publish_state(
-            static_cast<float>(target_pct));
+      const float fpct = static_cast<float>(target_pct);
+      if (!this->humidity_percent_published_ ||
+          this->humidity_percent_number_->state != fpct) {
+        this->humidity_percent_number_->publish_state(fpct);
+        this->humidity_percent_published_ = true;
+      }
     }
 #endif
     ESP_LOGI(TAG, "Humidity: target %d%%, current %d%%", target_pct,
@@ -887,6 +892,7 @@ void SAUNA360Component::set_humidity_step_number(float value) {
   if (v > 10)
     v = 10;
 
+  // Step-Mode: upper Nibble 0, keep Priority-Bits
   uint32_t payload = (this->bath_type_priority_received_hex_ & 0x0FFFFFFF);
 
   uint32_t raw =
@@ -896,6 +902,13 @@ void SAUNA360Component::set_humidity_step_number(float value) {
 
   this->create_send_data_(0x07, 0x6001, payload);
   ESP_LOGI(TAG, "SENT: Humidity step: %d (payload=0x%08X)", v, payload);
+
+#ifdef USE_NUMBER
+  if (this->humidity_step_number_ != nullptr) {
+    this->humidity_step_number_->publish_state(static_cast<float>(v));
+    this->humidity_step_published_ = true;
+  }
+#endif
 }
 
 void SAUNA360Component::set_humidity_percent_number(float value) {
@@ -906,13 +919,20 @@ void SAUNA360Component::set_humidity_percent_number(float value) {
     v = 63;
 
   uint32_t payload = this->bath_type_priority_received_hex_;
-  payload |= 0x10000000u; // ensure percent mode
+  payload |= 0x10000000u; // Percent-Mode
 
   payload &= ~(0x3Fu << 7);
   payload |= (static_cast<uint32_t>(v) & 0x3F) << 7;
 
   this->create_send_data_(0x07, 0x6001, payload);
   ESP_LOGI(TAG, "SENT: Humidity target (%%): %d (payload=0x%08X)", v, payload);
+
+#ifdef USE_NUMBER
+  if (this->humidity_percent_number_ != nullptr) {
+    this->humidity_percent_number_->publish_state(static_cast<float>(v));
+    this->humidity_percent_published_ = true;
+  }
+#endif
 }
 
 void SAUNA360Component::create_send_data_(uint8_t type, uint16_t code,
@@ -948,13 +968,14 @@ void SAUNA360Component::send_data_() {
 
 void SAUNA360Component::publish_session_() {
   const uint32_t s = this->session_active_
-                       ? ((millis() - this->session_start_ms_) / 1000u)
-                       : this->session_frozen_s_;
+                         ? ((millis() - this->session_start_ms_) / 1000u)
+                         : this->session_frozen_s_;
   const uint32_t m = s / 60u;
 
   static uint32_t last_sent_min = 0xFFFFFFFFu;
   if (this->session_active_) {
-    if (m == last_sent_min) return;
+    if (m == last_sent_min)
+      return;
   }
   last_sent_min = m;
 
