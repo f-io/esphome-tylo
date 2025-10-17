@@ -8,6 +8,7 @@ from .. import sauna360_ns, SAUNA360Component, CONF_SAUNA360_ID
 SAUNA360TextSensor = sauna360_ns.class_("SAUNA360TextSensor", text_sensor.TextSensor, cg.Component)
 
 CONF_HEATER_STATE = "heater_state"
+CONF_HEAT_WAVES = "heat_waves"
 
 CONFIG_SCHEMA = cv.All(
     cv.COMPONENT_SCHEMA.extend(
@@ -17,6 +18,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_HEATER_STATE): text_sensor.text_sensor_schema(
                 icon="mdi:heat-wave",
             ),
+            cv.Optional(CONF_HEAT_WAVES): text_sensor.text_sensor_schema(
+                icon="mdi:heat-wave",
+            ),
         }
     ),
 )
@@ -24,8 +28,14 @@ CONFIG_SCHEMA = cv.All(
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
+
     if CONF_HEATER_STATE in config:
         sens = await text_sensor.new_text_sensor(config[CONF_HEATER_STATE])
         cg.add(var.set_heater_state_text_sensor(sens))
+
+    if CONF_HEAT_WAVES in config:
+        waves = await text_sensor.new_text_sensor(config[CONF_HEAT_WAVES])
+        cg.add(var.set_heat_waves_text_sensor(waves))
+
     sauna360 = await cg.get_variable(config[CONF_SAUNA360_ID])
     cg.add(sauna360.register_listener(var))

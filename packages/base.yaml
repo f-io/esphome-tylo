@@ -114,9 +114,9 @@ switch:
 
 text_sensor:
   - platform: sauna360
-    heater_state:
+    heat_waves:
       name: "Heating Element"
-
+    
   - platform: template
     name: "${device_name} ESP Uptime"
     id: esp_uptime_flex

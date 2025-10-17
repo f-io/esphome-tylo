@@ -52,6 +52,7 @@ public:
   virtual void on_water_tank_level(uint16_t) {};
   virtual void on_session_uptime(uint32_t) {};
   virtual void on_session_uptime_text(const std::string &) {};
+  virtual void on_coils_active(uint8_t) {};
   int current_target_temperature = -1;
 };
 

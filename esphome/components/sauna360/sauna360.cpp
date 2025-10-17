@@ -569,6 +569,9 @@ void SAUNA360Component::process_relay_bitmap(uint32_t data) {
   const int active_coils = (c1 ? 1 : 0) + (c2 ? 1 : 0) + (c3 ? 1 : 0);
   const bool any_coil = (active_coils > 0);
 
+  for (auto &l : listeners_)
+    l->on_coils_active(static_cast<uint8_t>(active_coils));
+
   // Consider heater enabled if status flag or any coil energized
   const bool heater_enabled = this->heating_status_ || any_coil;
 

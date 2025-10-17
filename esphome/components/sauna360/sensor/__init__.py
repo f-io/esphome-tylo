@@ -57,13 +57,13 @@ CONFIG_SCHEMA = cv.All(
             unit_of_measurement=UNIT_MINUTE,
             device_class=DEVICE_CLASS_DURATION,
             state_class=STATE_CLASS_MEASUREMENT,
-            icon="mdi:counter",
+            icon="mdi:timer-outline",
           ),
           cv.Optional(CONF_SETTING_BATH_TIME): sensor.sensor_schema(
             unit_of_measurement=UNIT_MINUTE,
             device_class=DEVICE_CLASS_DURATION,
             state_class=STATE_CLASS_MEASUREMENT,
-            icon=ICON_TIMER,
+            icon="mdi:timer-refresh-outline",
           ),
           cv.Optional(CONF_TOTAL_UPTIME): sensor.sensor_schema(
             unit_of_measurement=UNIT_MINUTE,
@@ -76,7 +76,7 @@ CONFIG_SCHEMA = cv.All(
             accuracy_decimals=0,
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
-            icon=ICON_THERMOMETER,
+            icon="mdi:thermometer-high",
           ),
           cv.Optional(CONF_OVERHEATING_PCB_LIMIT): sensor.sensor_schema(
             unit_of_measurement=UNIT_CELSIUS,
