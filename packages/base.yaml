@@ -41,7 +41,8 @@ binary_sensor:
 
 sensor:
   - platform: uptime
-    name: "${device_name} ESP Uptime"
+    id: esp_uptime_seconds
+    internal: true
     update_interval: 1s
 
   - platform: wifi_signal
@@ -115,6 +116,41 @@ text_sensor:
   - platform: sauna360
     heater_state:
       name: "Heating Element"
+
+  - platform: template
+    name: "${device_name} ESP Uptime"
+    id: esp_uptime_flex
+    entity_category: diagnostic
+    update_interval: 1s
+    icon: "mdi:counter"
+    lambda: |-
+      const uint32_t s = (uint32_t) id(esp_uptime_seconds).state;
+
+      static uint32_t last_pub_s = 0;
+      const bool just_booted = (s == 0 && last_pub_s == 0);
+      bool should_publish = false;
+
+      if (s < 60) {
+        // 0–59 Sec.
+        should_publish = (s != last_pub_s) || just_booted;
+      } else {
+        // > 60 Sec
+        should_publish = (s % 60 == 0) && (s != last_pub_s);
+      }
+      if (!should_publish) return {};
+
+      last_pub_s = s;
+
+      char buf[24];
+      if (s < 60) {
+        // "SS Sec."
+        snprintf(buf, sizeof(buf), "%u Sec.", (unsigned) s);
+      } else {
+        // "MM Min."
+        const unsigned m = s / 60U;
+        snprintf(buf, sizeof(buf), "%u Min.", m);
+      }
+      return {buf};
 
 time:
   - platform: homeassistant
