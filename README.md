@@ -2,6 +2,8 @@
 
 This interface was developed for and validated with the **Tylö Sense Pure** (Pure panel). Basic functions also worked in our tests with Combi and Elite setups, but full compatibility and feature coverage are not guaranteed. It does not emulate a control panel and cannot replace one.
 
+> **Unofficial project.** See [Disclaimer & Trademarks](#disclaimer--trademarks).
+
 ---
 
 ## Hardware
@@ -17,13 +19,6 @@ The door sensor used in this project is an **ABUS FU7350W**.
 ### External Switch
 
 The external switch with LED feedback used in this project can be found [here](https://amzn.eu/d/iFFPtIz).
-
-### Sauna PCB
-
-| ![Oven PCB](documentation/images/96000067.jpeg) |
-|:----------------------------------------------:|
-| **Mikrocontroller**: `PIC32 MX150F128D` |
-| **Differential Bus Transceivers**: `TI SN65176B` |                  
 
 ---
 
@@ -48,7 +43,7 @@ The external switch with LED feedback used in this project can be found [here](h
     <tr>
       <th>Lolin S3 / ESP32-S3-DevKitC-1 (no termination)</th>
       <th>AtomS3 Lite + Tail485 (termination 68&nbsp;&Omega;)</th>
-      <th>Touch Display Demo (JC3248W535EN)</th>
+      <th>Touch Display (JC3248W535EN)</th>
     </tr>
   </thead>
   <tbody>
@@ -117,7 +112,7 @@ The external switch with LED feedback used in this project can be found [here](h
     <tr>
       <th>Pos</th>
       <th>Unit</th>
-      <th>Use pin</th>
+      <th>Pins used</th>
       <th>Comment</th>
       <th>Pin 1</th>
       <th>Pin 2</th>
@@ -199,15 +194,6 @@ The external switch with LED feedback used in this project can be found [here](h
   </tbody>
 </table>
 
-<table>
-  <tbody>
-    <tr>
-      <th><img src="documentation/images/wiring_diagram.jpeg" alt="Wirring Diagram" ></th>
-    </tr>
-  </tbody>
-</table>
-
-
 ---
 
 ## Communication
@@ -220,7 +206,7 @@ The external switch with LED feedback used in this project can be found [here](h
       <th>Baud</th>
       <th>Bits</th>
       <th>Parity</th>
-      <th>Stopbit</th>
+      <th>Stop bit</th>
     </tr>
   </thead>
   <tbody>
@@ -432,7 +418,7 @@ On each bus cycle the **heater** emits a heartbeat. Under normal conditions the 
 
 We transmit only after a **panel EOF**. To avoid collisions we wait at least one byte-time at 19 200 baud (8E1 ≈ 0.57 ms) plus a small guard on the **PURE** model, then start our frame (typically ~615 µs after the panel EOF).
 
-**COMBI / ELITE** behave slightly differently (likely due to the optional RS-485 humidity/temperature sensor). For these models we transmit ~7 100 µs after the panel EOF.
+**COMBI / ELITE** behave slightly differently (likely due to the optional RS-485 humidity/temperature sensor). For these models we transmit ≈7 100 µs after the panel EOF.
 
 
 <p>Measured timing to send <code>0x07</code> (Command) to heater via ESP32.</p>
@@ -445,7 +431,7 @@ We transmit only after a **panel EOF**. To avoid collisions we wait at least one
 
 ---
 
-# ESPHome Default Configuaration
+# ESPHome Default Configuration
 
 ```yaml
 substitutions:
@@ -544,7 +530,15 @@ ota_pass_sauna: "REPLACE_WITH_STRONG_PASSWORD"
 
 ![homeassistant](documentation/images/ha.png)
 
-## Apple Homekit
+## Apple HomeKit
 
 ![homekit](documentation/images/hk.png)
+
+# Disclaimer & Trademarks
+
+This project is independent of Sauna360, Tylö and Helo and is not affiliated with, endorsed by, or approved by them. All product names, logos, and brands are the property of their respective owners. Brand names are used solely to describe interoperability/compatibility (nominative use).
+
+**Reverse engineering:** Protocol details were derived from observing legitimate communication between lawfully acquired devices for the purpose of interoperability. No proprietary firmware, manuals, or copyrighted materials are distributed.
+
+**Safety/Liability:** Working with heaters and mains-powered equipment is hazardous. Use at your own risk. Usage may affect compliance and may void warranty. The author and contributors assume no liability for any damages or regulatory issues. Follow local electrical and fire-safety regulations. Regulatory requirements vary by country; verify compliance locally.
 
