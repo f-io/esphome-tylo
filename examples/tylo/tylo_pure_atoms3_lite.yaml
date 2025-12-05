@@ -1,0 +1,76 @@
+substitutions:
+  # — Device / Model -
+  device_name: "tylo"
+  model_name: "pure"                 # pure | combi | elite | combi_elite
+  branch_ref: "main"                 # main | dev
+
+  # — Area & Logging —
+  area_name: "Sauna"
+  log_level: "INFO"
+
+  # — Board / Flash (configurable) —
+  board_type: "esp32-s3-devkitc-1"   # "esp32-s3-devkitc-1", "lolin_s3"
+  flash_size: "8MB"                  # "4MB" | "8MB" | "16MB"
+  rgb_led_pin: GPIO35                # devkitc-1 = GPIO38 | Atom S3 lite = GPIO35
+  led_brightness_connected: "30"     # 0..100; 0 = OFF
+
+  # — UART pins (if wired differently) —
+  uart_tx_pin: "GPIO02"
+  uart_rx_pin: "GPIO01"
+
+  # — Defaults for bath/temperature —
+  default_bath_temperature: "92"
+  default_bath_time: "240"
+  default_max_bath_temperature: "110"
+
+  # — Defaults for Humidity settings —
+  default_humidity_step: "0"      # 0..10 - COMBI
+  default_humidity_percent: "0"   # 0..100 - COMBI_ELITE
+
+  # — Climate visuals —
+  min_temp_c: "40"
+  max_temp_c: "110"
+
+  # — Secrets from secrets.yaml —
+  api_encryption_key: !secret api_key_tylo
+  ota_password:       !secret ota_pass_tylo
+  wifi_ssid_sub:      !secret wifi_ssid
+  wifi_password_sub:  !secret wifi_password
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${device_name}
+  comment: ${device_name} sauna controller
+
+esp32:
+  board: ${board_type}
+  flash_size: ${flash_size}
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/f-io/esphome-tylo
+      ref: ${branch_ref}
+    refresh: 1s
+    components: [ sauna360 ]
+
+packages:
+  base:
+    url: https://github.com/f-io/esphome-tylo
+    ref: main
+    refresh: 1s
+    files: ["packages/base.yaml"]
+
+  led:
+   url: https://github.com/f-io/esphome-tylo
+   ref: main
+   refresh: 1s
+   files: ["packages/led.yaml"]
+
+  model:
+    url: https://github.com/f-io/esphome-tylo
+    ref: main
+    refresh: 1s
+    files: ["models/pure.yaml"]     # pure | combi | elite | combi_elite
