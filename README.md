@@ -1,6 +1,8 @@
-# RS485 Interface for Tylö/Helo Sauna Heaters
+# Home Assistant Integration for Tylö / Tylo and Helo Sauna Heaters via RS485
 
-This interface was developed for and validated with the **Tylö Sense Pure** (Pure panel). Basic functions also worked in our tests with Combi and Elite setups, but full compatibility and feature coverage are not guaranteed. It does not emulate a control panel and cannot replace one.
+This project provides an ESPHome-based RS485 integration for Tylö / Tylo and Helo sauna heaters (Pure, Combi, Elite). It allows Home Assistant to read temperatures, states, and sensor data, and send basic commands, while running in parallel to the original control panel.
+
+This interface was developed for and validated with the **Tylö Sense Pure** (Pure panel). Basic functions also worked in our tests with Combi and Elite setups, but full compatibility and feature coverage are not guaranteed.
 
 > **Unofficial project.** See [Disclaimer & Trademarks](#disclaimer--trademarks).
 
@@ -431,7 +433,7 @@ We transmit only after a **panel EOF**. To avoid collisions we wait at least one
 
 ---
 
-# ESPHome Default Configuration
+## ESPHome / Home Assistant Integration Example
 
 ```yaml
 substitutions:
@@ -512,7 +514,7 @@ packages:
     files: ["models/pure.yaml"]     # pure | combi | elite | combi_elite
 ```
 
-# secrets.yaml (example)
+## secrets.yaml (example)
 
 ```yaml
 # Wi-Fi
@@ -524,17 +526,17 @@ api_key_sauna: "REPLACE_WITH_BASE64_KEY"
 ota_pass_sauna: "REPLACE_WITH_STRONG_PASSWORD"
 ```
 
-# Integration Example
+## Home Assistant / HomeKit Integration Example
 
-## Home Assistant
+### Home Assistant
 
-![homeassistant](documentation/images/ha.png)
+![Home Assistant dashboard for Tylo / Helo sauna heater](documentation/images/ha.png)
 
-## Apple HomeKit
+### Apple HomeKit
 
-![homekit](documentation/images/hk.png)
+![Apple HomeKit view of Tylo / Helo sauna integration](documentation/images/hk.png)
 
-# Disclaimer & Trademarks
+## Disclaimer & Trademarks
 
 This project is independent of Sauna360, Tylö and Helo and is not affiliated with, endorsed by, or approved by them. All product names, logos, and brands are the property of their respective owners. Brand names are used solely to describe interoperability/compatibility (nominative use).
 
