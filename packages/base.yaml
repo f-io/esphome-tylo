@@ -90,6 +90,8 @@ number:
       id: bath_temperature
       mode: box
       bath_temperature_default: ${default_bath_temperature}
+      min_value: ${min_temp_c}
+      max_value: ${max_temp_c}
 
   - platform: sauna360
     bath_time:
@@ -102,6 +104,8 @@ number:
       name: "Max Bath Temperature"
       mode: box
       max_bath_temperature_default: ${default_max_bath_temperature}
+      min_value: ${min_temp_c}
+      max_value: ${max_temp_c}
 
 switch:
   - platform: sauna360
@@ -116,7 +120,7 @@ text_sensor:
   - platform: sauna360
     heat_waves:
       name: "Heating Element"
-    
+
   - platform: template
     name: "${device_name} ESP Uptime"
     id: esp_uptime_flex

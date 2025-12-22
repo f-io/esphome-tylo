@@ -465,7 +465,7 @@ substitutions:
   default_humidity_step: "0"      # 0..10 - COMBI
   default_humidity_percent: "0"   # 0..100 - COMBI_ELITE
 
-  # — Climate visuals —
+  # — Temperature limits —
   min_temp_c: "40"
   max_temp_c: "110"
 

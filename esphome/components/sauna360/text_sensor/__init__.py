@@ -5,7 +5,9 @@ from esphome.const import CONF_ID
 
 from .. import sauna360_ns, SAUNA360Component, CONF_SAUNA360_ID
 
-SAUNA360TextSensor = sauna360_ns.class_("SAUNA360TextSensor", text_sensor.TextSensor, cg.Component)
+SAUNA360TextSensor = sauna360_ns.class_(
+    "SAUNA360TextSensor", text_sensor.TextSensor, cg.Component
+)
 
 CONF_HEATER_STATE = "heater_state"
 CONF_HEAT_WAVES = "heat_waves"
@@ -24,6 +26,7 @@ CONFIG_SCHEMA = cv.All(
         }
     ),
 )
+
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])

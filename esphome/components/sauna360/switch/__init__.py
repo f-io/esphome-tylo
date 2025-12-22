@@ -12,8 +12,12 @@ from .. import (
     CONF_SAUNA360_ID,
 )
 
-SAUNA360LightRelaySwitch = sauna360_ns.class_("SAUNA360LightRelaySwitch", switch.Switch, cg.Component)
-SAUNA360HeaterRelaySwitch = sauna360_ns.class_("SAUNA360HeaterRelaySwitch", switch.Switch, cg.Component)
+SAUNA360LightRelaySwitch = sauna360_ns.class_(
+    "SAUNA360LightRelaySwitch", switch.Switch, cg.Component
+)
+SAUNA360HeaterRelaySwitch = sauna360_ns.class_(
+    "SAUNA360HeaterRelaySwitch", switch.Switch, cg.Component
+)
 
 
 CONF_LIGHT_RELAY = "light_relay"
@@ -34,13 +38,14 @@ CONFIG_SCHEMA = {
     ),
 }
 
+
 async def to_code(config):
     sauna360_component = await cg.get_variable(config[CONF_SAUNA360_ID])
     if light_relay := config.get(CONF_LIGHT_RELAY):
         s = await switch.new_switch(light_relay)
         await cg.register_parented(s, config[CONF_SAUNA360_ID])
         cg.add(sauna360_component.set_light_relay_switch(s))
-    if heater_relay := config.get(CONF_HEATER_RELAY):  
+    if heater_relay := config.get(CONF_HEATER_RELAY):
         s = await switch.new_switch(heater_relay)
         await cg.register_parented(s, config[CONF_SAUNA360_ID])
-        cg.add(sauna360_component.set_heater_relay_switch(s))           
+        cg.add(sauna360_component.set_heater_relay_switch(s))
