@@ -6,14 +6,16 @@ from esphome.const import CONF_ID
 DEPENDENCIES = ["uart"]
 
 sauna360_ns = cg.esphome_ns.namespace("sauna360")
-SAUNA360Component = sauna360_ns.class_("SAUNA360Component", cg.Component, uart.UARTDevice)
+SAUNA360Component = sauna360_ns.class_(
+    "SAUNA360Component", cg.Component, uart.UARTDevice
+)
 Mode = sauna360_ns.enum("SAUNA360Component::Mode")
 
 CONF_SAUNA360_ID = "sauna360_id"
 
 CONF_MODEL = "model"
 MODEL_OPTIONS = {
-    "pure":  cg.RawExpression("esphome::sauna360::SAUNA360Component::Mode::PURE"),
+    "pure": cg.RawExpression("esphome::sauna360::SAUNA360Component::Mode::PURE"),
     "combi": cg.RawExpression("esphome::sauna360::SAUNA360Component::Mode::COMBI"),
     "elite": cg.RawExpression("esphome::sauna360::SAUNA360Component::Mode::ELITE"),
 }
@@ -38,6 +40,7 @@ FINAL_VALIDATE_SCHEMA = uart.final_validate_device_schema(
     data_bits=8,
     stop_bits=1,
 )
+
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])

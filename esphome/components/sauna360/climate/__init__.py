@@ -7,14 +7,18 @@ from .. import sauna360_ns, SAUNA360Component, CONF_SAUNA360_ID
 
 Sauna360Climate = sauna360_ns.class_("Sauna360Climate", climate.Climate, cg.Component)
 
-CONFIG_SCHEMA = climate.climate_schema(Sauna360Climate).extend(
-    {
-        cv.GenerateID(): cv.declare_id(Sauna360Climate),
-        cv.GenerateID(CONF_SAUNA360_ID): cv.use_id(SAUNA360Component),
-        cv.Optional("bath_temperature_number_id"): cv.use_id(number.Number),
-        cv.Optional("heater_relay_id"): cv.use_id(switch.Switch),
-    }
-).extend(cv.COMPONENT_SCHEMA)
+CONFIG_SCHEMA = (
+    climate.climate_schema(Sauna360Climate)
+    .extend(
+        {
+            cv.GenerateID(): cv.declare_id(Sauna360Climate),
+            cv.GenerateID(CONF_SAUNA360_ID): cv.use_id(SAUNA360Component),
+            cv.Optional("bath_temperature_number_id"): cv.use_id(number.Number),
+            cv.Optional("heater_relay_id"): cv.use_id(switch.Switch),
+        }
+    )
+    .extend(cv.COMPONENT_SCHEMA)
+)
 
 
 async def to_code(config):

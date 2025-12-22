@@ -14,7 +14,9 @@ from .. import (
     CONF_SAUNA360_ID,
 )
 
-SAUNA360BinarySensor = sauna360_ns.class_("SAUNA360BinarySensor", binary_sensor.BinarySensor, cg.Component)
+SAUNA360BinarySensor = sauna360_ns.class_(
+    "SAUNA360BinarySensor", binary_sensor.BinarySensor, cg.Component
+)
 
 CONF_HEATER_STATUS = "heater_status"
 CONF_LIGHT_STATUS = "light_status"
@@ -26,8 +28,7 @@ CONFIG_SCHEMA = cv.All(
             cv.GenerateID(): cv.declare_id(SAUNA360BinarySensor),
             cv.GenerateID(CONF_SAUNA360_ID): cv.use_id(SAUNA360Component),
             cv.Optional(CONF_HEATER_STATUS): binary_sensor.binary_sensor_schema(
-                device_class=DEVICE_CLASS_HEAT,
-                icon="mdi:radiator-disabled"
+                device_class=DEVICE_CLASS_HEAT, icon="mdi:radiator-disabled"
             ),
             cv.Optional(CONF_LIGHT_STATUS): binary_sensor.binary_sensor_schema(
                 device_class=DEVICE_CLASS_LIGHT,
@@ -40,6 +41,7 @@ CONFIG_SCHEMA = cv.All(
         }
     ),
 )
+
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])

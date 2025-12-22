@@ -2,7 +2,7 @@ substitutions:
   device_name: "saunalcd"
   sauna_device_name: "tylo"
   api_encryption_key: !secret api_key_saunalcd
-  ota_password:       !secret ota_pass_saunalcd
+  ota_password: !secret ota_pass_saunalcd
 
   board_type: esp32-s3-devkitc-1
   flash_size: 16MB
@@ -11,11 +11,11 @@ substitutions:
   display_rotation: "0"
   ui_title: "Sauna"
 
-  climate_entity:        "climate.${sauna_device_name}_sauna_climate"
-  heater_switch:         "switch.${sauna_device_name}_heater"
-  light_switch:          "switch.${sauna_device_name}_light"
-  number_bath_temp:      "number.${sauna_device_name}_bath_temperature"
-  heating_element:       "sensor.${sauna_device_name}_heating_element"
+  climate_entity: "climate.${sauna_device_name}_sauna_climate"
+  heater_switch: "switch.${sauna_device_name}_heater"
+  light_switch: "switch.${sauna_device_name}_light"
+  number_bath_temp: "number.${sauna_device_name}_bath_temperature"
+  heating_element: "sensor.${sauna_device_name}_heating_element"
 
   climate_temp_min: 40
   climate_temp_max: 110
@@ -71,17 +71,17 @@ font:
     size: 26
     bpp: 4
     glyphs:
-      - "\U000F0425"  # mdi-power
-      - "\U000F0335"  # mdi-lightbulb
-      - "\U000F0336"  # mdi-lightbulb-outline
-      - "\U000F0E04"  # mdi-thermometer-minus
-      - "\U000F0E05"  # mdi-thermometer-plus
+      - "\U000F0425" # mdi-power
+      - "\U000F0335" # mdi-lightbulb
+      - "\U000F0336" # mdi-lightbulb-outline
+      - "\U000F0E04" # mdi-thermometer-minus
+      - "\U000F0E05" # mdi-thermometer-plus
 
 globals:
   - id: ui_set_temp
     type: int
     restore_value: no
-    initial_value: '0'
+    initial_value: "0"
 
 spi:
   id: display_qspi
@@ -194,7 +194,7 @@ sensor:
             return std::string(buf);
       - lvgl.slider.update:
           id: sld_set
-          value: !lambda 'return (int) roundf(id(ha_target_temp).state);'
+          value: !lambda "return (int) roundf(id(ha_target_temp).state);"
 
 lvgl:
   draw_rounding: 8
@@ -209,18 +209,18 @@ lvgl:
     # Switch-Track
     - id: st_sw_track
       radius: 18
-      bg_color: 0x2A2F38        # darkgrey (OFF)
+      bg_color: 0x2A2F38 # darkgrey (OFF)
 
     - id: st_sw_track_on
       radius: 18
-      bg_color: 0xC8CCD1        # lightgrey (ON)
+      bg_color: 0xC8CCD1 # lightgrey (ON)
 
     # Switch-Indicator
     - id: st_sw_ind_off
-      bg_opa: 0%                # OFF
+      bg_opa: 0% # OFF
 
     - id: st_sw_ind_on
-      bg_opa: 0%                # ON
+      bg_opa: 0% # ON
 
     - id: st_sw_knob
       bg_color: 0xFFFFFF
@@ -291,16 +291,16 @@ lvgl:
 
     # Icon-Color
     - id: st_icon_power_off
-      text_color: 0xFFFFFF      # white (OFF)
+      text_color: 0xFFFFFF # white (OFF)
 
     - id: st_icon_power_on
-      text_color: 0xFF7A00      # orange (ON)
+      text_color: 0xFF7A00 # orange (ON)
 
     - id: st_icon_light_off
-      text_color: 0xFFFFFF      # white (OFF)
+      text_color: 0xFFFFFF # white (OFF)
 
     - id: st_icon_light_on
-      text_color: 0xFFD000      # yellow (ON)
+      text_color: 0xFFD000 # yellow (ON)
 
   pages:
     - id: main_page
@@ -313,7 +313,7 @@ lvgl:
             width: 320
             text_color: 0xFFFFFF
             text_font: font_title
-            styles: [ st_lblbg_big ]
+            styles: [st_lblbg_big]
 
         - label:
             id: lbl_curr
@@ -324,7 +324,7 @@ lvgl:
             width: 320
             text_color: 0xFFFFFF
             text_font: font_big
-            styles: [ st_lblbg_big ]
+            styles: [st_lblbg_big]
 
         - label:
             id: lbl_set
@@ -335,25 +335,25 @@ lvgl:
             width: 320
             text_color: 0xFFFFFF
             text_font: font_mid
-            styles: [ st_lblbg_mid ]
+            styles: [st_lblbg_mid]
 
         - label:
             id: ico_power_off
-            text: "\U000F0425"     # mdi:power
+            text: "\U000F0425" # mdi:power
             text_font: mdi_26
             align: TOP_LEFT
             x: 14
             y: 224
-            styles: [ st_icon_power_off ]
+            styles: [st_icon_power_off]
 
         - label:
             id: ico_power_on
-            text: "\U000F0425"     # mdi:power
+            text: "\U000F0425" # mdi:power
             text_font: mdi_26
             align: TOP_LEFT
             x: 14
             y: 224
-            styles: [ st_icon_power_on ]
+            styles: [st_icon_power_on]
 
         - switch:
             id: sw_heater
@@ -362,19 +362,19 @@ lvgl:
             y: 220
             width: 66
             height: 36
-            styles: [ st_sw_track ]
+            styles: [st_sw_track]
             checked:
-              styles: [ st_sw_track_on ]
+              styles: [st_sw_track_on]
             indicator:
-              styles: [ st_sw_ind_off ]
+              styles: [st_sw_ind_off]
               checked:
-                styles: [ st_sw_ind_on ]
+                styles: [st_sw_ind_on]
             knob:
-              styles: [ st_sw_knob ]
+              styles: [st_sw_knob]
             on_value:
               - if:
                   condition:
-                    lambda: 'return (bool) x;'
+                    lambda: "return (bool) x;"
                   then:
                     - lvgl.widget.hide: { id: ico_power_off }
                     - lvgl.widget.show: { id: ico_power_on }
@@ -395,21 +395,21 @@ lvgl:
 
         - label:
             id: ico_light_off
-            text: "\U000F0336"     # mdi:lightbulb-outline
+            text: "\U000F0336" # mdi:lightbulb-outline
             text_font: mdi_26
             align: TOP_LEFT
             x: 178
             y: 224
-            styles: [ st_icon_light_off ]
+            styles: [st_icon_light_off]
 
         - label:
             id: ico_light_on
-            text: "\U000F0336"     # mdi:lightbulb-outline
+            text: "\U000F0336" # mdi:lightbulb-outline
             text_font: mdi_26
             align: TOP_LEFT
             x: 178
             y: 224
-            styles: [ st_icon_light_on ]
+            styles: [st_icon_light_on]
 
         - switch:
             id: sw_light
@@ -418,19 +418,19 @@ lvgl:
             y: 220
             width: 66
             height: 36
-            styles: [ st_sw_track ]
+            styles: [st_sw_track]
             checked:
-              styles: [ st_sw_track_on ]
+              styles: [st_sw_track_on]
             indicator:
-              styles: [ st_sw_ind_off ]
+              styles: [st_sw_ind_off]
               checked:
-                styles: [ st_sw_ind_on ]
+                styles: [st_sw_ind_on]
             knob:
-              styles: [ st_sw_knob ]
+              styles: [st_sw_knob]
             on_value:
               - if:
                   condition:
-                    lambda: 'return (bool) x;'
+                    lambda: "return (bool) x;"
                   then:
                     - lvgl.widget.hide: { id: ico_light_off }
                     - lvgl.widget.show: { id: ico_light_on }
@@ -456,9 +456,9 @@ lvgl:
             y: 310
             width: 64
             height: 48
-            styles: [ st_btn_base ]
+            styles: [st_btn_base]
             pressed:
-              styles: [ st_btn_pressed ]
+              styles: [st_btn_pressed]
             widgets:
               - label:
                   text: "\U000F0E04"
@@ -471,7 +471,7 @@ lvgl:
                   id(ui_set_temp) = v;
               - lvgl.slider.update:
                   id: sld_set
-                  value: !lambda 'return id(ui_set_temp);'
+                  value: !lambda "return id(ui_set_temp);"
               - lvgl.label.update:
                   id: lbl_set
                   text: !lambda |-
@@ -482,7 +482,7 @@ lvgl:
                   service: number.set_value
                   data:
                     entity_id: ${number_bath_temp}
-                    value: !lambda 'return (float) id(ui_set_temp);'
+                    value: !lambda "return (float) id(ui_set_temp);"
 
         - button:
             id: btn_inc
@@ -491,9 +491,9 @@ lvgl:
             y: 310
             width: 64
             height: 48
-            styles: [ st_btn_base ]
+            styles: [st_btn_base]
             pressed:
-              styles: [ st_btn_pressed ]
+              styles: [st_btn_pressed]
             widgets:
               - label:
                   text: "\U000F0E05"
@@ -506,7 +506,7 @@ lvgl:
                   id(ui_set_temp) = v;
               - lvgl.slider.update:
                   id: sld_set
-                  value: !lambda 'return id(ui_set_temp);'
+                  value: !lambda "return id(ui_set_temp);"
               - lvgl.label.update:
                   id: lbl_set
                   text: !lambda |-
@@ -517,7 +517,7 @@ lvgl:
                   service: number.set_value
                   data:
                     entity_id: ${number_bath_temp}
-                    value: !lambda 'return (float) id(ui_set_temp);'
+                    value: !lambda "return (float) id(ui_set_temp);"
 
         - slider:
             id: sld_set
@@ -526,11 +526,11 @@ lvgl:
             width: 240
             min_value: ${climate_temp_min}
             max_value: ${climate_temp_max}
-            styles: [ st_sld_track ]
+            styles: [st_sld_track]
             indicator:
-              styles: [ st_sld_ind_temp ]
+              styles: [st_sld_ind_temp]
             knob:
-              styles: [ st_sld_knob ]
+              styles: [st_sld_knob]
             on_value:
               - lambda: |-
                   id(ui_set_temp) = (int) x;
@@ -545,4 +545,4 @@ lvgl:
                   service: number.set_value
                   data:
                     entity_id: ${number_bath_temp}
-                    value: !lambda 'return (float) x;'
+                    value: !lambda "return (float) x;"

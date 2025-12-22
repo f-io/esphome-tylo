@@ -787,6 +787,8 @@ void SAUNA360Component::process_sensor_error(uint32_t data) {
 }
 
 void SAUNA360Component::set_max_bath_temperature_number(float value) {
+  value = std::round(value);
+
   uint32_t minutes_low12 = 0;
   if (this->last_bath_time_target_ >= 0) {
     minutes_low12 =
