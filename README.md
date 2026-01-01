@@ -6,7 +6,18 @@ This interface was developed for and validated with the **Tylö Sense Pure** (Pu
 
 > **Unofficial project.** See [Disclaimer & Trademarks](#disclaimer--trademarks).
 
----
+## Compatibility / Tested Environment
+
+Last tested with:
+
+- **ESPHome:** 2025.12.4
+- **Framework:** ESP-IDF 5.5.x
+- **Target:** ESP32-S3
+
+Other ESPHome versions may work, but are not guaranteed to be fully compatible.
+Breaking changes in ESPHome or ESP-IDF may require adjustments to this project.
+
+This project is actively maintained. Breaking changes will be addressed as they arise. Please open an issue if you encounter problems.
 
 ## Hardware
 
@@ -22,8 +33,6 @@ The door sensor used in this project is an **ABUS FU7350W**.
 
 The external switch with LED feedback used in this project can be found [here](https://amzn.eu/d/iFFPtIz).
 
----
-
 ## Pinout and Wiring Diagram
 
 ### Wiring Diagram
@@ -35,8 +44,6 @@ The external switch with LED feedback used in this project can be found [here](h
     </tr>
   </tbody>
 </table>
-
----
 
 ### Example Setups & Hardware Used For Testing
 
@@ -72,8 +79,6 @@ The external switch with LED feedback used in this project can be found [here](h
   </tbody>
 </table>
 
----
-
 ### Connector Pinout (Western Connector 4P4C)
 
 <table>
@@ -104,8 +109,6 @@ The external switch with LED feedback used in this project can be found [here](h
     </tr>
   </tbody>
 </table>
-
----
 
 ### Pinout Table
 
@@ -196,8 +199,6 @@ The external switch with LED feedback used in this project can be found [here](h
   </tbody>
 </table>
 
----
-
 ## Communication
 
 ### RS485 UART Communication Settings
@@ -221,14 +222,10 @@ The external switch with LED feedback used in this project can be found [here](h
   </tbody>
 </table>
 
----
-
 ### Message Format and Essential Bits
 
 <p>These details have been reverse-engineered by analyzing intercepted communication between a heater and its control panel.  
 As such, the list may not be complete or fully accurate. Further testing and validation may be required to confirm all behaviors and formats.</p>
-
----
 
 ### Keep-Alive Messages
 
@@ -264,8 +261,6 @@ As such, the list may not be complete or fully accurate. Further testing and val
     </tr>
   </tbody>
 </table>
-
----
 
 ### Message Structure
 
@@ -305,8 +300,6 @@ As such, the list may not be complete or fully accurate. Further testing and val
     </tr>
   </tbody>
 </table>
-
----
 
 ### Essential Codes and Their Descriptions
 
@@ -412,9 +405,6 @@ As such, the list may not be complete or fully accurate. Further testing and val
   </tbody>
 </table>
 
-
----
-
 ### Timing
 On each bus cycle the **heater** emits a heartbeat. Under normal conditions the **panel** follows ≈600 µs later. If the panel needs to issue a command, it skips that heartbeat and sends its command ≈1.6 ms after the heater heartbeat.
 
@@ -430,8 +420,6 @@ We transmit only after a **panel EOF**. To avoid collisions we wait at least one
        alt="timing measurement"
        style="width:667px;height:auto;">
 </p>
-
----
 
 ## ESPHome / Home Assistant Integration Example
 
