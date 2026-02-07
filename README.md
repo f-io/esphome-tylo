@@ -10,7 +10,7 @@ This interface was developed for and validated with the **Tylö Sense Pure** (Pu
 
 Last tested with:
 
-- **ESPHome:** 2025.12.4
+- **ESPHome:** 2026.1.4
 - **Framework:** ESP-IDF 5.5.x
 - **Target:** ESP32-S3
 
@@ -78,6 +78,20 @@ The external switch with LED feedback used in this project can be found [here](h
     </tr>
   </tbody>
 </table>
+
+### RS485 Bus Termination
+
+> [!IMPORTANT]
+> Some RS485 auto-direction transceivers require a **sufficiently low bus impedance**
+> to reliably switch into transmit mode.
+
+If **reading from the bus works**, but **writing fails**, this is often a sign of
+**insufficient bus termination**, not a protocol or timing issue.
+
+Tests have shown that certain auto-direction transceivers require a termination
+of **< 80 Ω** to reliably transmit.
+For example, **AtomS3 Lite + Tail485** with **68 Ω termination** works reliably,
+while boards without termination exhibit read-only behavior (TX fails).
 
 ### Connector Pinout (Western Connector 4P4C)
 
