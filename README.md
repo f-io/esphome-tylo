@@ -107,7 +107,7 @@ while boards without termination exhibit read-only behavior (TX fails).
     <tr>
       <td>1</td>
       <td>A</td>
-      <th rowspan="4"><img src="documentation/images/pinout.jpeg" alt="Pinout" style="width:400px;height:auto;"></th>
+      <th rowspan="4"><img src="documentation/images/pinout.png" alt="Pinout" style="width:600px;height:auto;"></th>
     </tr>
     <tr>
       <td>2</td>
