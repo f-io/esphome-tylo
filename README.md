@@ -10,9 +10,9 @@ This interface was developed for and validated with the **Tylö Sense Pure** (Pu
 
 Last tested with:
 
-- **ESPHome:** 2026.1.4
-- **Framework:** ESP-IDF 5.5.x
-- **Target:** ESP32-S3
+- **ESPHome:** 2026.3.2
+- **Framework:** ESP-IDF 5.5.3
+- **Target:** ESP32-S3 (esp32-s3-devkitc-1)
 
 Other ESPHome versions may work, but are not guaranteed to be fully compatible.
 Breaking changes in ESPHome or ESP-IDF may require adjustments to this project.
