@@ -10,8 +10,8 @@ This interface was developed for and validated with the **Tylö Sense Pure** (Pu
 
 Last tested with:
 
-- **ESPHome:** 2026.3.2
-- **Framework:** ESP-IDF 5.5.3
+- **ESPHome:** 2026.4
+- **Framework:** ESP-IDF 5.5.4
 - **Target:** ESP32-S3 (esp32-s3-devkitc-1)
 
 Other ESPHome versions may work, but are not guaranteed to be fully compatible.
@@ -440,42 +440,45 @@ We transmit only after a **panel EOF**. To avoid collisions we wait at least one
 ```yaml
 substitutions:
   # — Device / Model -
-  device_name: "tylo"
-  model_name: "pure"                 # pure | combi | elite | combi_elite
-  branch_ref: "main"                 # main | dev
+  device_name: tylo
+  model_name: pure                 # pure | combi | elite | combi_elite
+  branch_ref: main                 # main | dev
 
   # — Area & Logging —
-  area_name: "Sauna"
-  log_level: "INFO"
+  area_name: Sauna
+  log_level: INFO
 
   # — Board / Flash (configurable) —
-  board_type: "esp32-s3-devkitc-1"   # "esp32-s3-devkitc-1", "lolin_s3"
-  flash_size: "16MB"                 # "4MB" | "8MB" | "16MB"
-  rgb_led_pin: GPIO38                # devkitc-1 = GPIO38 | Atom S3 lite = GPIO35
-  led_brightness_connected: "30"     # 0..100; 0 = OFF
+  board_type: esp32-s3-devkitc-1   # esp32-s3-devkitc-1, lolin_s3
+  flash_size: 8MB                  # 4MB | 8MB | 16MB
+  rgb_led_pin: GPIO38              # devkitc-1 = GPIO38 | Atom S3 lite = GPIO35
+  led_brightness_connected: 30     # 0..100; 0 = OFF
 
   # — UART pins (if wired differently) —
-  uart_tx_pin: "GPIO41"
-  uart_rx_pin: "GPIO42"
+  uart_tx_pin: GPIO02
+  uart_rx_pin: GPIO01
 
   # — Defaults for bath/temperature —
-  default_bath_temperature: "92"
-  default_bath_time: "240"
-  default_max_bath_temperature: "110"
+  default_bath_temperature: 94
+  default_bath_time: 240
+  default_max_bath_temperature: 110
 
   # — Defaults for Humidity settings —
-  default_humidity_step: "0"      # 0..10 - COMBI
-  default_humidity_percent: "0"   # 0..100 - COMBI_ELITE
+  default_humidity_step: 0      # 0..10 - COMBI
+  default_humidity_percent: 0   # 0..100 - COMBI_ELITE
 
-  # — Temperature limits —
-  min_temp_c: "40"
-  max_temp_c: "110"
+  # — Climate visuals —
+  min_temp_c: 60
+  max_temp_c: 110
 
   # — Secrets from secrets.yaml —
-  api_encryption_key: !secret api_key_sauna
-  ota_password:       !secret ota_pass_sauna
+  api_encryption_key: !secret api_key_tylo
+  ota_password:       !secret ota_pass_tylo
   wifi_ssid_sub:      !secret wifi_ssid
   wifi_password_sub:  !secret wifi_password
+
+  # - LED - 
+  led: ${led_brightness_connected != 0}
 
 esphome:
   name: ${device_name}
@@ -499,21 +502,21 @@ external_components:
 packages:
   base:
     url: https://github.com/f-io/esphome-tylo
-    ref: main
+    ref: ${branch_ref}
     refresh: 1s
     files: ["packages/base.yaml"]
 
   led:
    url: https://github.com/f-io/esphome-tylo
-   ref: main
+   ref: ${branch_ref}
    refresh: 1s
-   files: ["packages/led.yaml"]
+   files: ["packages/led/${led}.yaml"]
 
   model:
     url: https://github.com/f-io/esphome-tylo
-    ref: main
+    ref: ${branch_ref}
     refresh: 1s
-    files: ["models/pure.yaml"]     # pure | combi | elite | combi_elite
+    files: ["models/${model_name}.yaml"]
 ```
 
 ## secrets.yaml (example)
