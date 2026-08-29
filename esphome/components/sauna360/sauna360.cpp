@@ -13,9 +13,12 @@
 #include "driver/uart.h"
 #include "esp_rom_sys.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "sdkconfig.h"
+
+#include <cstring>
 
 namespace esphome {
 namespace sauna360 {
@@ -23,6 +26,20 @@ namespace sauna360 {
 static const char *TAG = "sauna360";
 
 void SAUNA360Component::setup() {
+  // Cross-core safe TX queue (producers: main task + RX task, consumer: RX task)
+  this->tx_queue_ = xQueueCreate(8, sizeof(TxFrame));
+  if (this->tx_queue_ == nullptr) {
+    ESP_LOGE(TAG, "Failed to create TX queue");
+    this->mark_failed();
+    return;
+  }
+
+  // Optional DE/RE pin for transceivers without auto-direction (e.g. MAX485)
+  if (this->flow_control_pin_ != nullptr) {
+    this->flow_control_pin_->setup();
+    this->flow_control_pin_->digital_write(false); // listen
+  }
+
   this->min_ifg_us_ = (this->mode_ == Mode::PURE) ? 520 : 7000;
 
   const char *mode_str = nullptr;
@@ -110,7 +127,7 @@ void SAUNA360Component::setup() {
           const bool panel_eof = (w0 == 0x98 && w1 == 0x40 && w2 == 0x07 &&
                                   w3 == 0xFD && w4 == 0xE3 && w5 == 0x9C);
 
-          if (panel_eof && !self->tx_queue_.empty()) {
+          if (panel_eof && uxQueueMessagesWaiting(self->tx_queue_) > 0) {
             esp_rom_delay_us(self->min_ifg_us_);
             size_t rx_avail = 0;
             (void)uart_get_buffered_data_len(PORT, &rx_avail);
@@ -242,13 +259,13 @@ void SAUNA360Component::handle_packet_(std::vector<uint8_t> packet) {
 
   if (from_panel) {
     ESP_LOGD(TAG, "%s [ HEATER <-- PANEL ] CODE %04X DATA 0x%08X",
-             format_hex_pretty(packet).c_str(), code, data);
+             format_hex_pretty(packet).c_str(), code, (unsigned)data);
     packet.clear();
     return;
   }
 
   ESP_LOGD(TAG, "%s [ HEATER --> PANEL ] CODE %04X DATA 0x%08X",
-           format_hex_pretty(packet).c_str(), code, data);
+           format_hex_pretty(packet).c_str(), code, (unsigned)data);
 
   switch (code) {
   case 0x3400:
@@ -299,10 +316,11 @@ void SAUNA360Component::handle_packet_(std::vector<uint8_t> packet) {
     this->process_door_error(data);
     break;
   default:
-    if ((code & 0xFF00) == 0xB600)
+    if ((code & 0xFF00) == 0xB600) {
       this->process_sensor_error(data);
-    else
+    } else {
       ESP_LOGD(TAG, "Unhandled packet code: %04X", code);
+    }
     break;
   }
 }
@@ -585,9 +603,10 @@ void SAUNA360Component::process_relay_bitmap(uint32_t data) {
   const bool aux3_on = (data & AUX3_MASK) != 0;
 
   // Raw frame log
-  ESP_LOGI(TAG, "0x7180 raw: 0x%08X (bits:%02X.%02X.%02X.%02X)", data,
-           (data >> 24) & 0xFF, (data >> 16) & 0xFF, (data >> 8) & 0xFF,
-           data & 0xFF);
+  ESP_LOGI(TAG, "0x7180 raw: 0x%08X (bits:%02X.%02X.%02X.%02X)",
+           (unsigned)data, (unsigned)((data >> 24) & 0xFF),
+           (unsigned)((data >> 16) & 0xFF), (unsigned)((data >> 8) & 0xFF),
+           (unsigned)(data & 0xFF));
 
   // Pretty coil tuple and binary map (C3 C2 C1)
   char coil_tuple[32];
@@ -607,7 +626,8 @@ void SAUNA360Component::process_relay_bitmap(uint32_t data) {
       TAG, "Light: %s, Heater: %s, Coils: %s (active: %d, map: 0b%s [C3C2C1])",
       ONOFF(light_on), derived_state, coil_tuple, active_coils, coilmap_bin);
 
-  if (this->mode_ == Mode::COMBI || this->mode_ == Mode::ELITE) {
+  if (this->mode_ == Mode::COMBI || this->mode_ == Mode::ELITE ||
+      this->mode_ == Mode::COMBI_ELITE) {
     if ((data & AUX_MASK) != 0) {
       ESP_LOGI(TAG, "AUX relays: [%s,%s,%s]", ONOFF(aux1_on), ONOFF(aux2_on),
                ONOFF(aux3_on));
@@ -686,10 +706,10 @@ void SAUNA360Component::process_tank_level(uint32_t data) {
     level_pct = 100;
     break;
   case 0x1800:
-    ESP_LOGI(TAG, "Tank level error: (0x%08X)", data);
+    ESP_LOGI(TAG, "Tank level error: (0x%08X)", (unsigned)data);
     return;
   default:
-    ESP_LOGI(TAG, "Tank level unknown: 0x%08X", data);
+    ESP_LOGI(TAG, "Tank level unknown: 0x%08X", (unsigned)data);
     return;
   }
   ESP_LOGI(TAG, "Tank level: %d%%", level_pct);
@@ -714,7 +734,7 @@ void SAUNA360Component::process_total_uptime(uint32_t data) {
   for (auto &listener : listeners_) {
     listener->on_total_uptime(data);
   }
-  ESP_LOGI(TAG, "Total uptime: %d minutes", data);
+  ESP_LOGI(TAG, "Total uptime: %u minutes", (unsigned)data);
 }
 
 void SAUNA360Component::process_remaining_time(uint32_t data) {
@@ -906,7 +926,8 @@ void SAUNA360Component::set_humidity_step_number(float value) {
   payload |= (raw << 4);
 
   this->create_send_data_(0x07, 0x6001, payload);
-  ESP_LOGI(TAG, "SENT: Humidity step: %d (payload=0x%08X)", v, payload);
+  ESP_LOGI(TAG, "SENT: Humidity step: %d (payload=0x%08X)", v,
+           (unsigned)payload);
 
 #ifdef USE_NUMBER
   if (this->humidity_step_number_ != nullptr) {
@@ -930,7 +951,8 @@ void SAUNA360Component::set_humidity_percent_number(float value) {
   payload |= (static_cast<uint32_t>(v) & 0x3F) << 7;
 
   this->create_send_data_(0x07, 0x6001, payload);
-  ESP_LOGI(TAG, "SENT: Humidity target (%%): %d (payload=0x%08X)", v, payload);
+  ESP_LOGI(TAG, "SENT: Humidity target (%%): %d (payload=0x%08X)", v,
+           (unsigned)payload);
 
 #ifdef USE_NUMBER
   if (this->humidity_percent_number_ != nullptr) {
@@ -961,14 +983,40 @@ void SAUNA360Component::create_send_data_(uint8_t type, uint16_t code,
   packet.insert(packet.begin(), 0x98); // SOF
   packet.push_back(0x9C);              // EOF
 
-  this->tx_queue_.push(packet);
+  if (this->tx_queue_ == nullptr || packet.size() > sizeof(TxFrame::data)) {
+    ESP_LOGE(TAG, "TX frame dropped (size=%u)", (unsigned)packet.size());
+    return;
+  }
+
+  TxFrame frame;
+  frame.len = packet.size();
+  memcpy(frame.data, packet.data(), packet.size());
+
+  if (xQueueSend(this->tx_queue_, &frame, 0) != pdTRUE) {
+    ESP_LOGW(TAG, "TX queue full, frame dropped");
+  }
 }
 
 void SAUNA360Component::send_data_() {
-  const std::vector<uint8_t> &packet = this->tx_queue_.front();
+  TxFrame frame;
+  if (xQueueReceive(this->tx_queue_, &frame, 0) != pdTRUE) {
+    return;
+  }
+
   static constexpr uart_port_t PORT = UART_NUM_0;
-  uart_write_bytes(PORT, (const char *)packet.data(), packet.size());
-  this->tx_queue_.pop();
+
+  if (this->flow_control_pin_ != nullptr) {
+    this->flow_control_pin_->digital_write(true); // drive bus
+    esp_rom_delay_us(10);
+  }
+
+  uart_write_bytes(PORT, reinterpret_cast<const char *>(frame.data), frame.len);
+
+  if (this->flow_control_pin_ != nullptr) {
+    // Release only after the last stop bit left the shift register
+    uart_wait_tx_done(PORT, pdMS_TO_TICKS(20));
+    this->flow_control_pin_->digital_write(false);
+  }
 }
 
 void SAUNA360Component::publish_session_() {
@@ -1029,6 +1077,7 @@ void SAUNA360Component::initialize_defaults() {
 void SAUNA360Component::dump_config() {
   ESP_LOGCONFIG(TAG, "UART component");
   ESP_LOGCONFIG(TAG, "Session timer: enabled");
+  LOG_PIN("  Flow control pin: ", this->flow_control_pin_);
 }
 
 } // namespace sauna360

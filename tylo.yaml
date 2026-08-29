@@ -17,6 +17,7 @@ substitutions:
   # — UART pins (if wired differently) —
   uart_tx_pin: "GPIO41"
   uart_rx_pin: "GPIO42"
+  flow_control_pin: "false" # false | GPIOXY for DE/RE transceivers
 
   # — Defaults for bath/temperature —
   default_bath_temperature: "92"

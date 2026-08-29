@@ -2,7 +2,11 @@
 
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
+#include "esphome/core/gpio.h"
 #include "esphome/core/helpers.h"
+
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
 
 #ifdef USE_SENSOR
 #include "esphome/components/sensor/sensor.h"
@@ -27,7 +31,6 @@
 #endif
 
 #include <cmath>
-#include <queue>
 #include <string>
 #include <vector>
 
@@ -74,6 +77,7 @@ class SAUNA360Component : public uart::UARTDevice, public Component {
 public:
   enum class Mode : uint8_t { PURE = 0, COMBI = 1, ELITE = 2, COMBI_ELITE = 3 };
   void set_mode(Mode m) { mode_ = m; }
+  void set_flow_control_pin(GPIOPin *pin) { flow_control_pin_ = pin; }
 
   void setup() override;
   void loop() override;
@@ -129,9 +133,15 @@ protected:
   uint32_t COILS_MASK_{0x0001C000};
   int COILS_SHIFT_{14};
 
+  struct TxFrame {
+    uint8_t len;
+    uint8_t data[24];
+  };
+
   std::vector<SAUNA360Listener *> listeners_{};
   std::vector<uint8_t> rx_message_;
-  std::queue<std::vector<uint8_t>> tx_queue_;
+  QueueHandle_t tx_queue_{nullptr};
+  GPIOPin *flow_control_pin_{nullptr};
 
   uint8_t decode_escape_sequence(uint8_t data);
   bool validate_packet(std::vector<uint8_t> &packet);

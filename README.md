@@ -10,8 +10,8 @@ This interface was developed for and validated with the **Tylö Sense Pure** (Pu
 
 Last tested with:
 
-- **ESPHome:** 2026.4
-- **Framework:** ESP-IDF 5.5.4
+- **ESPHome:** 2026.8.1
+- **Framework:** ESP-IDF 5.5.5
 - **Target:** ESP32-S3 (esp32-s3-devkitc-1)
 
 Other ESPHome versions may work, but are not guaranteed to be fully compatible.
@@ -92,6 +92,19 @@ Tests have shown that certain auto-direction transceivers require a termination
 of **< 80 Ω** to reliably transmit.
 For example, **AtomS3 Lite + Tail485** with **68 Ω termination** works reliably,
 while boards without termination exhibit read-only behavior (TX fails).
+
+### Optional Flow Control Pin (MAX485 DE/RE)
+
+As an alternative to auto-direction transceivers, modules with manual direction
+control (e.g. **MAX485** with DE/RE pins) can be used. Connect DE and RE
+together to a free GPIO and set the `flow_control_pin` substitution in your
+device yaml. The default is `"false"`, which leaves the pin unbound — only set
+a GPIO when your transceiver actually needs direction control:
+
+```yaml
+substitutions:
+  flow_control_pin: "false" # false | GPIOXY - only for MAX485-style DE/RE transceivers
+```
 
 ### Connector Pinout (Western Connector 4P4C)
 

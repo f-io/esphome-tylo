@@ -1,3 +1,6 @@
+substitutions:
+  flow_control_pin: "false" # false | GPIOXY (MAX485 DE/RE)
+
 logger:
   level: ${log_level}
   baud_rate: 0
@@ -25,6 +28,7 @@ uart:
 sauna360:
   id: sauna360_component
   model: ${model_name}
+  flow_control_pin: ${flow_control_pin}
 
 binary_sensor:
   - platform: sauna360
