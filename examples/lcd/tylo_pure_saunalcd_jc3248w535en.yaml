@@ -2,7 +2,6 @@ substitutions:
   device_name: "saunalcd"
   sauna_device_name: "tylo"
   api_encryption_key: !secret api_key_saunalcd
-  ota_password: !secret ota_pass_saunalcd
 
   board_type: esp32-s3-devkitc-1
   flash_size: 16MB
@@ -44,7 +43,7 @@ api:
 
 ota:
   - platform: esphome
-    password: ${ota_password}
+    encryption:
 
 wifi:
   ssid: !secret wifi_ssid

@@ -34,7 +34,6 @@ substitutions:
 
   # — Secrets from secrets.yaml —
   api_encryption_key: !secret api_key_sauna
-  ota_password: !secret ota_pass_sauna
   wifi_ssid_sub: !secret wifi_ssid
   wifi_password_sub: !secret wifi_password
 
